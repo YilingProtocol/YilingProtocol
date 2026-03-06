@@ -42,7 +42,7 @@ function SectionDivider() {
 
 // ─── Navigation ─────────────────────────────────────────────────────────────
 
-function Navigation() {
+function Navigation({ dark }: { dark?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 50);
@@ -52,8 +52,10 @@ function Navigation() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "border-b border-border bg-white/80 backdrop-blur-xl" : "bg-transparent"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        dark
+          ? scrolled ? "border-b border-[#2d2d44] bg-[#0a0a0f]/90 backdrop-blur-xl" : "bg-transparent"
+          : scrolled ? "border-b border-border bg-white/80 backdrop-blur-xl" : "bg-transparent"
       }`}
     >
       <div className="mx-auto max-w-6xl px-6 flex items-center justify-between h-[72px]">
@@ -61,20 +63,23 @@ function Navigation() {
           <div className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center">
             <Dices className="w-4 h-4 text-white" />
           </div>
-          <span className="font-heading font-bold text-[16px] tracking-tight text-text">Yiling Protocol</span>
+          <span className={`font-heading font-bold text-[16px] tracking-tight transition-colors duration-500 ${dark ? "text-white" : "text-text"}`}>Yiling Protocol</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-[14px] text-text-secondary font-medium">
-          {["Protocol", "Infrastructure", "Build", "Docs"].map((i) => (
-            <a key={i} href={`#${i.toLowerCase()}`} className="hover:text-text transition-colors duration-200">
+        <div className={`hidden md:flex items-center gap-8 text-[14px] font-medium transition-colors duration-500 ${dark ? "text-[#a3a3a3]" : "text-text-secondary"}`}>
+          {["Protocol", "Infrastructure", "Build"].map((i) => (
+            <a key={i} href={`#${i.toLowerCase()}`} className={`transition-colors duration-200 ${dark ? "hover:text-white" : "hover:text-text"}`}>
               {i}
             </a>
           ))}
+          <a href="/docs/getting-started/overview" className={`transition-colors duration-200 ${dark ? "hover:text-white" : "hover:text-text"}`}>Docs</a>
         </div>
 
         <a
-          href="#"
-          className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full bg-text text-white text-[13px] font-semibold transition-all duration-200 hover:bg-accent-light"
+          href="/docs/getting-started/quickstart"
+          className={`hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-500 ${
+            dark ? "bg-white text-[#0a0a0f] hover:bg-gray-200" : "bg-text text-white hover:bg-accent-light"
+          }`}
         >
           Enter Protocol <ArrowRight className="w-3.5 h-3.5" />
         </a>
@@ -109,7 +114,7 @@ function Hero() {
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <a href="#"
+            <a href="/docs/getting-started/quickstart"
               className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-text text-white text-[15px] font-semibold transition-all duration-200 hover:bg-accent-light hover:scale-[1.02]">
               Enter Protocol
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -373,6 +378,7 @@ function SchematicDiagram() {
             <polygon points="786,344 780,348 786,352" fill={`${green}70`} />
 
             {/* SKC Engine — highlighted core */}
+            <g>
             <rect x={565} y={303} width={205} height={90} rx="8" ry="8"
               fill="#0d1117" stroke={purple} strokeWidth="2" />
             <line x1={575} y1={303} x2={760} y2={303} stroke={purple} strokeWidth="3" opacity="0.6" />
@@ -403,6 +409,8 @@ function SchematicDiagram() {
                 <animate attributeName="y2" values="310;390;310" dur="3s" repeatCount="indefinite" />
               </line>
             )}
+
+            </g>
 
             {/* Pipe: SKC → Truth */}
             <line x1={565} y1={348} x2={490} y2={348} stroke={`${purple}50`} strokeWidth="2" />
@@ -473,44 +481,68 @@ function SchematicDiagram() {
   );
 }
 
-function HowItWorks() {
+function HowItWorks({ onDarkChange }: { onDarkChange?: (dark: boolean) => void }) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInViewHIW = useInView(sectionRef, { margin: "-40% 0px -40% 0px" });
+
+  useEffect(() => {
+    onDarkChange?.(isInViewHIW);
+  }, [isInViewHIW, onDarkChange]);
+
   return (
-    <section id="protocol" className="relative py-28 px-6">
-      <div className="relative mx-auto max-w-6xl">
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, margin: "-80px" }} variants={stagger} className="space-y-16">
-          <motion.div variants={fadeUp} className="text-center space-y-4">
-            <p className="text-text-muted text-[12px] font-semibold tracking-[0.2em] uppercase">Protocol</p>
-            <h2 className="font-heading font-bold text-[30px] sm:text-[38px] md:text-[44px] tracking-tight">How It Works</h2>
-            <p className="text-text-secondary text-[16px] max-w-md mx-auto">An open and modular system — fully on-chain, fully autonomous</p>
-          </motion.div>
+    <>
+      {/* Full-screen dark overlay */}
+      <motion.div
+        className="fixed inset-0 z-40 pointer-events-none"
+        style={{ background: "#0a0a0f" }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isInViewHIW ? 1 : 0 }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+      />
 
-          {/* Mechanical schematic diagram — desktop */}
-          <SchematicDiagram />
+      <section ref={sectionRef} id="protocol" className="relative py-28 px-6" style={{ position: "relative", zIndex: 41 }}>
+        <div className="relative mx-auto max-w-6xl">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, margin: "-80px" }} variants={stagger} className="space-y-16">
+            <motion.div variants={fadeUp} className="text-center space-y-4">
+              <p className="text-[12px] font-semibold tracking-[0.2em] uppercase" style={{ color: isInViewHIW ? "#a3a3a3" : undefined }}><motion.span animate={{ color: isInViewHIW ? "#737373" : "#a3a3a3" }} transition={{ duration: 0.6 }}>Protocol</motion.span></p>
+              <h2 className="font-heading font-bold text-[30px] sm:text-[38px] md:text-[44px] tracking-tight"><motion.span animate={{ color: isInViewHIW ? "#f5f5f5" : "#171717" }} transition={{ duration: 0.6 }}>How It Works</motion.span></h2>
+              <p className="text-[16px] max-w-md mx-auto"><motion.span animate={{ color: isInViewHIW ? "#a3a3a3" : "#525252" }} transition={{ duration: 0.6 }}>An open and modular system — fully on-chain, fully autonomous</motion.span></p>
+            </motion.div>
 
-          {/* Mobile: stacked cards */}
-          <div className="grid sm:grid-cols-2 lg:hidden gap-4">
-            {[
-              { icon: Users, number: "01", title: "Create Market", description: "A creator deploys a question to the MarketFactory contract.", color: "#2563eb" },
-              { icon: Brain, number: "02", title: "Agents Predict", description: "AI agents analyze and submit probability predictions with bonds.", color: "#7c3aed" },
-              { icon: Dices, number: "03", title: "Random Stop", description: "After each prediction, a dice rolls. If triggered, the market resolves.", color: "#171717" },
-              { icon: TrendingUp, number: "04", title: "Truth & Payouts", description: "Cross-entropy scoring rewards accuracy. Truth emerges from math.", color: "#16a34a" },
-            ].map((step) => (
-              <motion.div key={step.number} variants={fadeUp} className="card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ background: `${step.color}10`, border: `1px solid ${step.color}20` }}>
-                    <step.icon className="w-5 h-5" style={{ color: step.color }} />
+            {/* Mechanical schematic diagram — desktop */}
+            <SchematicDiagram />
+
+            {/* Mobile: stacked cards */}
+            <div className="grid sm:grid-cols-2 lg:hidden gap-4">
+              {[
+                { icon: Users, number: "01", title: "Create Market", description: "A creator deploys a question to the MarketFactory contract.", color: "#2563eb" },
+                { icon: Brain, number: "02", title: "Agents Predict", description: "AI agents analyze and submit probability predictions with bonds.", color: "#7c3aed" },
+                { icon: Dices, number: "03", title: "Random Stop", description: "After each prediction, a dice rolls. If triggered, the market resolves.", color: "#171717" },
+                { icon: TrendingUp, number: "04", title: "Truth & Payouts", description: "Cross-entropy scoring rewards accuracy. Truth emerges from math.", color: "#16a34a" },
+              ].map((step) => (
+                <motion.div key={step.number} variants={fadeUp} className="rounded-2xl p-6 border transition-all duration-600"
+                  animate={{
+                    background: isInViewHIW ? "#141420" : "#ffffff",
+                    borderColor: isInViewHIW ? "#2d2d44" : "#e5e5e5",
+                  }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ background: `${step.color}10`, border: `1px solid ${step.color}20` }}>
+                      <step.icon className="w-5 h-5" style={{ color: step.color }} />
+                    </div>
+                    <span className="font-mono text-[12px] font-bold" style={{ color: isInViewHIW ? "#737373" : "#a3a3a3" }}>{step.number}</span>
                   </div>
-                  <span className="font-mono text-[12px] font-bold text-text-muted">{step.number}</span>
-                </div>
-                <h3 className="font-heading font-bold text-[16px] text-text mb-2">{step.title}</h3>
-                <p className="text-text-muted text-[14px] leading-[1.7]">{step.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
+                  <h3 className="font-heading font-bold text-[16px] mb-2"><motion.span animate={{ color: isInViewHIW ? "#f5f5f5" : "#171717" }} transition={{ duration: 0.6 }}>{step.title}</motion.span></h3>
+                  <p className="text-[14px] leading-[1.7]"><motion.span animate={{ color: isInViewHIW ? "#a3a3a3" : "#a3a3a3" }} transition={{ duration: 0.6 }}>{step.description}</motion.span></p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -922,7 +954,7 @@ const chainRow2 = [
 
 function ChainTicker({ chains, reverse }: { chains: string[]; reverse?: boolean }) {
   const content = chains.map((name, i) => (
-    <span key={`${name}-${i}`} className="inline-flex items-center gap-2 sm:gap-3 px-2 group/chain cursor-default">
+    <a key={`${name}-${i}`} href={`/docs/chains/${name.toLowerCase().replace(/\s+/g, "-")}`} className="inline-flex items-center gap-2 sm:gap-3 px-2 group/chain cursor-pointer">
       <svg viewBox="0 0 24 24" className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 shrink-0 opacity-20 group-hover/chain:opacity-80 transition-opacity duration-300">
         {chainLogos[name]?.icon}
       </svg>
@@ -930,7 +962,7 @@ function ChainTicker({ chains, reverse }: { chains: string[]; reverse?: boolean 
         {name}
       </span>
       <span className="text-orange/30 text-[20px] ml-1">·</span>
-    </span>
+    </a>
   ));
 
   return (
@@ -966,7 +998,7 @@ function ChainAgnostic() {
       </div>
 
       <div className="text-center mt-10 space-y-4">
-        <a href="#" className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-border text-text-secondary hover:text-text hover:border-border-light text-[14px] font-semibold transition-all duration-200">
+        <a href="/docs/chains/overview" className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-border text-text-secondary hover:text-text hover:border-border-light text-[14px] font-semibold transition-all duration-200">
           Explore Integrations <ArrowRight className="w-4 h-4" />
         </a>
         <p className="text-text-muted text-[13px]">Chain-agnostic · SDK included · One-line config</p>
@@ -992,7 +1024,7 @@ function CTA() {
               Deploy the protocol on your chain, connect your agents, and create self-resolving markets.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <a href="#"
+              <a href="/docs/getting-started/quickstart"
                 className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-orange text-white text-[15px] font-semibold transition-all duration-200 hover:brightness-110 hover:scale-[1.02]">
                 Start Building <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </a>
@@ -1046,8 +1078,9 @@ function SlotLetter({ char, delay, color }: { char: string; delay: number; color
         transition={{ delay: delay / 1000, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
         className="inline-block font-heading font-extrabold"
         style={{
-          WebkitTextStroke: `1.5px ${color}`,
+          WebkitTextStroke: `2px ${color}`,
           WebkitTextFillColor: settled ? "transparent" : color,
+          paintOrder: "stroke fill",
           opacity: settled ? 1 : 0.30,
           transition: "opacity 0.6s ease, -webkit-text-fill-color 0.6s ease",
         }}
@@ -1065,7 +1098,7 @@ function BigBrandText() {
   return (
     <div className="relative py-16 overflow-hidden">
       <div className="relative mx-auto max-w-6xl px-6">
-        <div className="text-center select-none text-[60px] sm:text-[90px] md:text-[120px] lg:text-[150px] tracking-[-0.04em] leading-[0.9]">
+        <div className="text-center select-none text-[60px] sm:text-[90px] md:text-[120px] lg:text-[150px] tracking-[0.02em] leading-[0.9]">
           <div>
             {word1.split("").map((char, i) => (
               <SlotLetter key={`y-${i}`} char={char} delay={i * 80} color="#d4d4d4" />
@@ -1073,7 +1106,7 @@ function BigBrandText() {
           </div>
           <div>
             {word2.split("").map((char, i) => (
-              <SlotLetter key={`p-${i}`} char={char} delay={(word1.length * 80) + i * 80} color="#ea580c" />
+              <SlotLetter key={`p-${i}`} char={char} delay={i * 80} color="#ea580c" />
             ))}
           </div>
         </div>
@@ -1136,9 +1169,11 @@ function Footer() {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const [isDark, setIsDark] = useState(false);
+
   return (
     <main>
-      <Navigation />
+      <Navigation dark={isDark} />
       <Hero />
 
       <MarqueeBand items={[
@@ -1149,7 +1184,7 @@ export default function Home() {
 
       <Problem />
       <SectionDivider />
-      <HowItWorks />
+      <HowItWorks onDarkChange={setIsDark} />
       <SectionDivider />
       <Mechanism />
 

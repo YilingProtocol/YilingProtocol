@@ -111,6 +111,29 @@ body {
   50% { opacity: 0; }
 }
 
+/* Docs content */
+.docs-content h1 { font-family: var(--font-heading); font-weight: 800; font-size: 32px; margin-bottom: 16px; letter-spacing: -0.02em; }
+.docs-content h2 { font-family: var(--font-heading); font-weight: 700; font-size: 24px; margin-top: 40px; margin-bottom: 12px; letter-spacing: -0.01em; }
+.docs-content h3 { font-family: var(--font-heading); font-weight: 700; font-size: 18px; margin-top: 32px; margin-bottom: 8px; }
+.docs-content p { color: #525252; font-size: 15px; line-height: 1.8; margin-bottom: 16px; }
+.docs-content ul, .docs-content ol { color: #525252; font-size: 15px; line-height: 1.8; margin-bottom: 16px; padding-left: 24px; }
+.docs-content ul { list-style-type: disc; }
+.docs-content ol { list-style-type: decimal; }
+.docs-content li { margin-bottom: 4px; }
+.docs-content strong { color: #171717; font-weight: 600; }
+.docs-content a { color: #ea580c; text-decoration: underline; text-underline-offset: 2px; }
+.docs-content a:hover { color: #c2410c; }
+.docs-content code { font-family: var(--font-mono); font-size: 13px; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 4px; padding: 1px 5px; }
+.docs-content pre { background: #1a1a2e; border: 1px solid #2d2d44; border-radius: 12px; padding: 20px; margin-bottom: 20px; overflow-x: auto; }
+.docs-content pre code { background: none; border: none; padding: 0; color: #c8c8e0; font-size: 13px; line-height: 1.7; }
+.docs-content table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
+.docs-content th { text-align: left; font-weight: 600; padding: 10px 12px; border-bottom: 2px solid #e5e5e5; color: #171717; }
+.docs-content td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; color: #525252; }
+.docs-content tr:hover td { background: #fafafa; }
+.docs-content blockquote { border-left: 3px solid #ea580c; padding-left: 16px; margin: 16px 0; color: #525252; font-style: italic; }
+.docs-content hr { border: none; border-top: 1px solid #e5e5e5; margin: 32px 0; }
+.docs-content em { color: #525252; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
