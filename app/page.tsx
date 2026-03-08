@@ -98,13 +98,6 @@ function Hero() {
     <section className="relative min-h-[90vh] flex items-center justify-center pt-20 pb-16">
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-8">
-          <motion.div variants={fadeUp} className="flex justify-center">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange/20 bg-orange-light text-[13px] text-orange font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange" />
-              Built on Harvard Research
-            </div>
-          </motion.div>
-
           <motion.h1 variants={fadeUp} className="font-heading font-extrabold text-[44px] sm:text-[56px] md:text-[72px] lg:text-[84px] tracking-[-0.03em] leading-[1]">
             <span className="text-text">The Self-Resolving</span>
             <br />
@@ -134,7 +127,7 @@ function Hero() {
             {[
               { value: "0", label: "Oracles Needed" },
               { value: "Base", label: "Network" },
-              { value: "Harvard", label: "Research" },
+              { value: "Game", label: "Theory" },
             ].map((stat, i) => (
               <div key={stat.label} className="text-center">
                 <span className="font-heading font-bold text-2xl sm:text-3xl tracking-tight text-text">{stat.value}</span>
