@@ -12,6 +12,7 @@ import {
   Code2,
   Globe,
   Layers,
+  Lightbulb,
   Menu,
   Moon,
   Rocket,
@@ -29,6 +30,17 @@ const docsTree = [
     items: [
       { slug: "getting-started/overview", title: "Overview" },
       { slug: "getting-started/how-it-works", title: "How It Works" },
+    ],
+  },
+  {
+    title: "Use Cases",
+    icon: Lightbulb,
+    items: [
+      { slug: "use-cases/prediction-markets", title: "Prediction Markets" },
+      { slug: "use-cases/governance", title: "DAO Governance" },
+      { slug: "use-cases/dispute-resolution", title: "Dispute Resolution" },
+      { slug: "use-cases/data-labeling", title: "Data Labeling & AI" },
+      { slug: "use-cases/subjective-oracles", title: "Subjective Oracles" },
     ],
   },
   {
@@ -174,6 +186,227 @@ Every agent could be the last one, and the last agent's report *becomes* truth. 
 **Pattern 2: Build on Top** — Embed Yiling as a resolution primitive in your protocol. Your governance, dispute, or oracle system calls the contracts to resolve questions.
 
 **Pattern 3: Connect Agents** — Build AI agents that participate in markets, using any LLM or algorithm.`,
+
+  // ── USE CASES ─────────────────────────────────────────────────────────
+
+  "use-cases/prediction-markets": `# Prediction Markets
+
+Build oracle-free prediction markets where truth emerges from game theory instead of external resolution.
+
+## The Oracle Problem
+
+Traditional prediction markets (Polymarket, Augur, Kalshi) depend on external oracles to determine outcomes. In March 2025, a UMA token holder [manipulated a Polymarket resolution](https://orochi.network/blog/oracle-manipulation-in-polymarket-2025) by controlling 25% of voting power — flipping a market from 9% to 100% despite no real-world event occurring.
+
+For subjective or long-horizon questions — *"Will AI surpass human reasoning by 2030?"* — no reliable oracle even exists.
+
+## How Yiling Solves This
+
+The SKC mechanism uses probabilistic stopping and cross-entropy scoring so that **truth emerges from the participants themselves**, with no oracle needed.
+
+\`\`\`
+Create market → Agents submit predictions → Random stop check
+→ Last prediction = reference truth → Cross-entropy payouts
+\`\`\`
+
+## Advantages Over Existing Solutions
+
+| Feature | Polymarket/Augur | Yiling Protocol |
+|---------|-----------------|-----------------|
+| Resolution | External oracle | Self-resolving (SKC) |
+| Oracle manipulation | Possible (UMA 2025) | Impossible — no oracle |
+| Subjective questions | Limited | Native support |
+| Deployment | Centralized | Permissionless on Base |
+| Truthfulness | Not guaranteed | Perfect Bayesian Equilibrium |
+
+## Best For
+
+- Subjective or unverifiable questions
+- Long-horizon forecasting (years, decades)
+- Markets where oracle manipulation is a risk
+- Permissionless, decentralized prediction platforms`,
+
+  "use-cases/governance": `# DAO Governance
+
+Replace token-weighted voting with game-theoretically optimal truth discovery.
+
+## The Problem with Token Voting
+
+Most DAOs use token-weighted voting: 1 token = 1 vote. This creates well-documented problems:
+
+- **Plutocracy** — whales dominate decisions
+- **Low participation** — voter apathy (often <5% turnout)
+- **No skin in the game** — voting is free, so uninformed voting costs nothing
+- **Binary choices** — up/down vote loses nuance
+
+## How Yiling Solves This
+
+Instead of voting on proposals, DAO members **report their honest belief** about whether a proposal will achieve its stated goal. The SKC mechanism ensures honesty is the dominant strategy because:
+
+1. Every reporter posts a bond (skin in the game)
+2. Cross-entropy scoring rewards accuracy, not majority position
+3. Probabilistic stopping makes manipulation impossible
+
+\`\`\`
+Proposal: "Should we allocate 500K to marketing?"
+        ↓
+Reframed: "Will allocating 500K to marketing increase TVL by >20%?"
+        ↓
+Agents report probability → SKC resolves → consensus emerges
+\`\`\`
+
+## Advantages Over Token Voting
+
+| Feature | Token Voting | Yiling Governance |
+|---------|-------------|-------------------|
+| Sybil resistance | Requires token | Bond-based |
+| Informed decisions | No incentive | Accuracy rewarded |
+| Manipulation | Whale dominance | Game-theoretically secure |
+| Nuance | Binary yes/no | Continuous probability |
+| Participation | Free (apathy) | Bonded (skin in game) |
+
+## Best For
+
+- Subjective governance decisions ("Is this grant worth funding?")
+- Parameter tuning ("Should we change the fee to 3%?")
+- Treasury allocation decisions
+- Protocol upgrade assessments`,
+
+  "use-cases/dispute-resolution": `# Dispute Resolution
+
+Resolve disputes without trusted arbiters, courts, or centralized panels.
+
+## The Problem
+
+Decentralized systems — marketplaces, insurance, escrow — need dispute resolution but face a dilemma: any human arbiter introduces centralization, bias, and cost. Existing solutions (Kleros, Aragon Court) use token-staked juries, which still suffer from whale manipulation and low-quality judgments.
+
+## How Yiling Solves This
+
+Frame any dispute as a question and let the SKC mechanism resolve it. Reporters bond tokens to submit their assessment. The mechanism's game-theoretic properties ensure honest reporting without needing a trusted judge.
+
+\`\`\`
+Dispute: "Did the contractor deliver the work as specified?"
+        ↓
+Market created → Assessors submit probability reports
+        ↓
+SKC resolves → Consensus probability = resolution
+        ↓
+If probability > threshold → resolved in favor of contractor
+\`\`\`
+
+## Use Cases
+
+- **Marketplace disputes** — buyer/seller disagreements
+- **Insurance claims** — "Did the insured event occur?"
+- **Bounty verification** — "Was the bounty completed satisfactorily?"
+- **Content takedown appeals** — "Does this content violate policy?"
+- **Smart contract escrow** — automated release based on consensus
+
+## Advantages
+
+| Feature | Traditional Arbitration | Yiling Resolution |
+|---------|----------------------|-------------------|
+| Speed | Days to weeks | Minutes to hours |
+| Cost | Expensive | Bond-based (recovered if honest) |
+| Bias | Arbiter-dependent | Game-theoretically neutral |
+| Scalability | Limited by humans | Unlimited on-chain |
+| Transparency | Opaque | Fully on-chain |`,
+
+  "use-cases/data-labeling": `# Data Labeling & AI
+
+Incentivize truthful data labeling for AI training without centralized review pipelines.
+
+## The Problem
+
+AI training requires massive labeled datasets. Current approaches:
+
+- **Human review** — expensive ($0.10–$2.00 per label), inconsistent, slow
+- **Crowdsourcing** — quality varies wildly, gaming incentives
+- **Expert panels** — doesn't scale, bottleneck
+- **LLM self-labeling** — circular, amplifies biases
+
+The core issue: **how do you verify label quality without a ground truth oracle?** This is exactly the problem the SKC mechanism was designed to solve.
+
+## How Yiling Solves This
+
+Each labeling task becomes a market. Labelers post bonds and submit their assessments. The SKC mechanism's cross-entropy scoring naturally rewards accurate labelers and penalizes inaccurate ones — without ever needing a "gold standard" ground truth.
+
+\`\`\`
+Task: "Is this image NSFW?" / "Is this text toxic?"
+        ↓
+Labelers submit probability assessments with bonds
+        ↓
+SKC resolves → consensus label + quality scores per labeler
+        ↓
+Use scores to weight labels and build reputation
+\`\`\`
+
+## Why This Works
+
+The SKC mechanism is a form of **information elicitation without verification**. The key insight from the [Harvard research](https://arxiv.org/abs/2306.04305):
+
+> *"A reference agent with access to more information can serve as a reasonable proxy for the ground truth."*
+
+Each subsequent labeler sees previous labels and adds their own signal. The final labeler's assessment — informed by all predecessors — becomes the reference truth.
+
+## Applications
+
+- **Content moderation** — toxic, NSFW, misinformation detection
+- **RLHF data** — preference labels for AI alignment
+- **Medical imaging** — diagnostic label consensus
+- **Fact-checking** — claim verification
+- **Sentiment analysis** — subjective classification at scale`,
+
+  "use-cases/subjective-oracles": `# Subjective Oracles
+
+Provide on-chain oracle services for questions that have no objective, verifiable answer.
+
+## The Problem
+
+Existing oracles (Chainlink, Pyth, UMA) work well for objective data: prices, sports scores, weather. But a large class of on-chain decisions depend on **subjective** information:
+
+- *"Is this NFT derivative art or a copy?"*
+- *"Did this protocol deliver on its roadmap?"*
+- *"Is this community proposal beneficial?"*
+- *"Has this real-world event meaningfully occurred?"*
+
+No price feed or API can answer these questions. Traditional optimistic oracles (UMA) use token-staked voting, which is vulnerable to whale manipulation.
+
+## How Yiling Solves This
+
+Yiling Protocol acts as a **subjective oracle primitive**. Any smart contract can request a resolution by creating a market, and the SKC mechanism produces a consensus probability that other contracts can consume.
+
+\`\`\`
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  Insurance DApp  │  │  Governance DAO   │  │  NFT Marketplace │
+└────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘
+         │                     │                      │
+         └─────────────────────┼──────────────────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   YILING PROTOCOL   │
+                    │  (Subjective Oracle)│
+                    └──────────┬──────────┘
+                               │
+                         ┌─────▼─────┐
+                         │   BASE    │
+                         └───────────┘
+\`\`\`
+
+## Comparison
+
+| Feature | Chainlink | UMA | Yiling |
+|---------|-----------|-----|--------|
+| Objective data | Yes | Yes | No (use Chainlink) |
+| Subjective data | No | Limited | Yes (native) |
+| Oracle manipulation | N/A | Possible (2025) | Impossible |
+| Resolution method | Data feeds | Token voting | SKC mechanism |
+| Truthfulness guarantee | Data quality | Economic | Mathematical (PBE) |
+
+## Best For
+
+- **Subjective on-chain decisions** that no data feed can answer
+- **Complementing existing oracles** — use Chainlink for prices, Yiling for everything else
+- **Cross-protocol resolution** — multiple dApps can share Yiling as their subjective oracle`,
 
   // ── SKC MECHANISM ────────────────────────────────────────────────────────
 
