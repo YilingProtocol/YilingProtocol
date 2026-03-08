@@ -1147,46 +1147,30 @@ function BigBrandText() {
 function Footer() {
   return (
     <footer className="relative border-t border-border">
-      <div className="relative py-16 px-6">
+      <div className="relative py-12 px-6">
         <div className="relative mx-auto max-w-5xl">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-12">
-            <div className="lg:col-span-2 space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center">
-                  <Dices className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-heading font-bold text-[17px] text-text">Yiling Protocol</span>
+          <div className="flex flex-col items-center text-center space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center">
+                <Dices className="w-4 h-4 text-white" />
               </div>
-              <p className="text-text-muted text-[14px] leading-[1.8] max-w-xs">The Self-Resolving Truth Layer. Oracle-free prediction markets live on Base.</p>
-              <div className="flex items-center gap-2.5 pt-1">
-                <a href="#" className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-border-light transition-all duration-200">
-                  <Github className="w-4 h-4" />
-                </a>
-                <a href="#" className="w-9 h-9 rounded-lg border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-border-light transition-all duration-200">
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                </a>
-              </div>
+              <span className="font-heading font-bold text-[17px] text-text">Yiling Protocol</span>
             </div>
-            {[
-              { title: "Protocol", links: ["Overview", "Mechanism", "Infrastructure", "Chains"] },
-              { title: "Developers", links: ["SDK Docs", "Agent API", "Contracts", "GitHub"] },
-              { title: "Resources", links: ["SKC Paper", "Blog", "FAQ"] },
-            ].map((col) => (
-              <div key={col.title} className="space-y-4">
-                <h4 className="text-[12px] text-text-muted uppercase tracking-[0.15em] font-semibold">{col.title}</h4>
-                <ul className="space-y-2.5">
-                  {col.links.map((l) => (
-                    <li key={l}><a href="#" className="text-[14px] text-text-muted hover:text-text transition-colors duration-200">{l}</a></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <p className="text-text-muted text-[14px] leading-[1.8] max-w-sm">Oracle-free prediction markets live on Base. Built on Harvard&apos;s SKC mechanism.</p>
+            <div className="flex items-center gap-3">
+              <a href="https://github.com/Muhammed5500/YilingProcotol-landing-OnBase" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-border-light transition-all duration-200">
+                <Github className="w-4.5 h-4.5" />
+              </a>
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-border-light transition-all duration-200">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+              </a>
+            </div>
           </div>
 
-          <div className="section-divider mt-12 mb-8" />
+          <div className="section-divider mt-8 mb-6" />
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-text-muted text-[13px]">MIT License &middot; Built on Harvard Research</p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-text-muted text-[13px]">MIT License · Built on Harvard Research</p>
             <p className="text-text-muted text-[13px]">&copy; 2026 Yiling Protocol</p>
           </div>
         </div>
