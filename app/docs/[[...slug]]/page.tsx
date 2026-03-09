@@ -17,6 +17,7 @@ import {
   Moon,
   Rocket,
   Sun,
+  Users,
   X,
   Dices,
 } from "lucide-react";
@@ -30,6 +31,25 @@ const docsTree = [
     items: [
       { slug: "getting-started/overview", title: "Overview" },
       { slug: "getting-started/how-it-works", title: "How It Works" },
+    ],
+  },
+  {
+    title: "Use Markets",
+    icon: Users,
+    items: [
+      { slug: "markets/explore", title: "Explore Markets" },
+      { slug: "markets/how-to-predict", title: "How to Predict" },
+      { slug: "markets/payouts", title: "Payouts & Rewards" },
+    ],
+  },
+  {
+    title: "Build on Yiling",
+    icon: Code2,
+    items: [
+      { slug: "build/overview", title: "Why Build on Yiling" },
+      { slug: "build/integration", title: "Integration Guide" },
+      { slug: "build/contracts", title: "Contract Reference" },
+      { slug: "build/fixed-point-math", title: "FixedPointMath" },
     ],
   },
   {
@@ -53,20 +73,11 @@ const docsTree = [
     ],
   },
   {
-    title: "Base Network",
+    title: "Networks",
     icon: Globe,
     items: [
-      { slug: "base/overview", title: "Why Base" },
-      { slug: "base/contracts", title: "Contract Addresses" },
-    ],
-  },
-  {
-    title: "Smart Contracts",
-    icon: Code2,
-    items: [
-      { slug: "contracts/overview", title: "Overview" },
-      { slug: "contracts/prediction-market", title: "PredictionMarket" },
-      { slug: "contracts/fixed-point-math", title: "FixedPointMath" },
+      { slug: "networks/base", title: "Base" },
+      { slug: "networks/monad", title: "Monad" },
     ],
   },
   {
@@ -86,106 +97,496 @@ const docsContent: Record<string, string> = {
 
   "getting-started/overview": `# Overview
 
-## What is Yiling Protocol?
+## What is Yiling?
 
-Yiling Protocol is an **open, oracle-free truth discovery infrastructure** live on Base. It implements the SKC (Srinivasan-Karger-Chen) mechanism — a mathematically proven system where consensus emerges from game theory, not external oracles or human referees.
+Yiling is an **oracle-free prediction market protocol** — and also a live product. We run our own prediction markets on Base and Monad, and the same infrastructure is open for anyone to build on.
 
-Based on [peer-reviewed research](https://arxiv.org/abs/2306.04305) from Harvard (published at ACM EC 2025), the protocol provides a general-purpose primitive for **eliciting and aggregating truthful information** in any context where ground truth is unverifiable, subjective, or long-horizon.
+Based on [peer-reviewed research](https://arxiv.org/abs/2306.04305) from Harvard (published at ACM EC 2025), the protocol implements the SKC mechanism — a mathematically proven system where truth emerges from game theory, not external oracles.
 
-## The Problem
+## Two Ways to Use Yiling
 
-Systems that need to determine truth — prediction markets, governance, dispute resolution — all face the same bottleneck: **who decides what's true?**
+### 1. Trade on Our Markets
+Yiling runs live prediction markets on **Base** and **Monad**. You can explore markets, submit your predictions, and earn rewards for accuracy — no oracle needed.
 
-- **Prediction markets** depend on external oracles (Polymarket's UMA oracle was [manipulated in 2025](https://orochi.network/blog/oracle-manipulation-in-polymarket-2025))
-- **DAO governance** relies on token-weighted voting (plutocracy, low participation)
-- **Dispute resolution** requires trusted arbiters (centralization, bias)
+→ [Explore Markets on Base](https://yilingmarket-onbase.vercel.app/)
 
-Every system that relies on an external authority to determine truth inherits that authority's limitations, biases, and attack surface.
+### 2. Build Your Own
+The same infrastructure powering our markets is available for you to build on. Create your own prediction markets, governance systems, dispute resolution, or anything that needs decentralized truth discovery.
 
-## The Solution
+→ [Integration Guide](/docs/build/overview)
 
-Yiling Protocol removes the oracle entirely. Instead, truth emerges from **game theory and information aggregation**:
+## Why It Matters
+
+Every prediction market today depends on an external oracle to decide what's true. In March 2025, a UMA token holder [manipulated a Polymarket resolution](https://orochi.network/blog/oracle-manipulation-in-polymarket-2025) by controlling 25% of voting power.
+
+Yiling removes the oracle entirely:
 
 - **Self-resolving** — markets close themselves through probabilistic stopping
-- **Truthful equilibrium** — honest reporting is a Perfect Bayesian Equilibrium (mathematically proven)
-- **Cross-entropy scoring** — participants earn rewards proportional to accuracy
-- **Bond-based** — every report requires a deposit, creating real skin in the game
-- **Permissionless** — anyone can create markets or connect agents
-- **Live on Base** — deployed and running with low gas fees
-
-## Applications
-
-| Application | What It Replaces |
-|-------------|-----------------|
-| Prediction Markets | External oracles (UMA, Chainlink) |
-| DAO Governance | Token-weighted voting |
-| Dispute Resolution | Trusted arbiters, courts |
-| Data Labeling & AI | Human review pipelines |
-| Subjective Oracles | Oracle committees |`,
+- **Truthful equilibrium** — honest reporting is a Perfect Bayesian Equilibrium
+- **Cross-entropy scoring** — earn rewards proportional to your accuracy
+- **Bond-based** — every prediction requires a deposit, creating skin in the game
+- **Live now** — deployed on Base and Monad with low gas fees`,
 
   "getting-started/how-it-works": `# How It Works
 
 ## The Flow
 
 \`\`\`
-1. Anyone creates a market ("question + parameters")
+1. A market is created ("Will ETH hit $10k by 2026?")
        ↓
-2. Agents report sequentially (each posts a bond)
+2. Predictors submit their probability estimates (each posts a bond)
        ↓
-3. After each report: random stop check (probability α)
+3. After each prediction: random stop check (probability α)
        ↓
-4. Market resolves → last report = reference truth
+4. Market resolves → last prediction = reference truth
        ↓
 5. Cross-entropy scoring calculates payouts
        ↓
-6. Agents claim: bond + reward (accurate) or bond - penalty (inaccurate)
+6. Predictors claim: bond + reward (accurate) or lose bond (inaccurate)
 \`\`\`
 
-## The Key Insight
+## Why This Works
 
-Every agent could be the last one, and the last agent's report *becomes* truth. Since the last agent has observed all previous reports plus their own private information, they represent the most informed view. This makes honest reporting the dominant strategy for *every* agent at *every* step.
+Every predictor could be the last one, and the last predictor's report *becomes* the reference truth. Since the last predictor has observed all previous reports plus their own information, they represent the most informed view. This makes honest reporting the dominant strategy for *every* predictor at *every* step.
 
-## Protocol Components
+## Who Can Participate?
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| Smart Contracts | **Core Protocol** | The only required piece — deployed on Base |
-| AI Agents | Participants | Any LLM, algorithm, or human can participate |
-| Frontend | Application | Market creation and interaction UI |
+Anyone. Yiling markets are permissionless:
 
-## System Architecture
+- **Humans** — connect your wallet and submit predictions directly
+- **AI Agents** — any LLM, algorithm, or bot can participate programmatically
+- **Protocols** — other smart contracts can integrate Yiling as a resolution layer
+
+## System Overview
 
 \`\`\`
 ┌─────────────────────────────────────────────────┐
-│            YOUR APPLICATION LAYER                │
-│  (prediction market, governance, dispute system) │
+│              YILING MARKETS (our app)            │
+│     Base: yilingmarket-onbase.vercel.app         │
 └───────────────────┬─────────────────────────────┘
                     │
-          ┌─────────┼─────────┐
-          ▼         ▼         ▼
-   ┌──────────┐ ┌────────┐ ┌──────────┐
-   │   SDK    │ │  API   │ │Direct RPC│
-   │ (soon)   │ │ (soon) │ │(available│
-   └────┬─────┘ └───┬────┘ └────┬─────┘
-        └────────────┼──────────┘
-                     │
-        ┌────────────▼────────────┐
-        │    YILING CONTRACTS     │
-        │  (Truth Discovery Core) │
-        └────────────┬────────────┘
-                     │
-              ┌──────▼──────┐
-              │    BASE     │
-              └─────────────┘
+        ┌───────────┼───────────┐
+        │     YOUR APP / AGENT  │  ← you can build here too
+        └───────────┼───────────┘
+                    │
+        ┌───────────▼───────────┐
+        │    YILING CONTRACTS   │
+        │  (Truth Discovery)    │
+        └───────────┬───────────┘
+                    │
+           ┌────────▼────────┐
+           │  Base · Monad   │
+           └─────────────────┘
+\`\`\``,
+
+  // ── USE MARKETS ───────────────────────────────────────────────────────
+
+  "markets/explore": `# Explore Markets
+
+Yiling runs live prediction markets on multiple chains. Browse open markets, see current probabilities, and submit your own predictions.
+
+## Live Markets
+
+| Chain | Status | Link |
+|-------|--------|------|
+| **Base** | ✅ Live | [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/) |
+| **Monad** | ✅ Live | Coming soon |
+
+## What You'll Find
+
+Each market has:
+
+- **Question** — what's being predicted
+- **Current price** — the market's current probability estimate (0–100%)
+- **Number of predictions** — how many people have participated
+- **Bond amount** — how much you need to deposit to predict
+- **Status** — active (accepting predictions) or resolved (payouts available)
+
+## Market Types
+
+Yiling markets can cover any question — especially ones that traditional oracles can't handle:
+
+- **Subjective questions** — "Is this NFT derivative art or original?"
+- **Long-horizon forecasts** — "Will AI surpass human reasoning by 2030?"
+- **Unverifiable outcomes** — questions with no objective data feed
+- **Standard predictions** — crypto prices, events, elections`,
+
+  "markets/how-to-predict": `# How to Predict
+
+Step-by-step guide to participating in Yiling prediction markets.
+
+## Requirements
+
+- A wallet (MetaMask, Coinbase Wallet, etc.)
+- ETH on Base (for gas + bond)
+- That's it — no signup, no KYC
+
+## Steps
+
+### 1. Connect Your Wallet
+
+Go to [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/) and connect your wallet. Make sure you're on the Base network.
+
+### 2. Browse Markets
+
+Explore active markets and find a question you have insight on. Check the current market price — this is the crowd's current probability estimate.
+
+### 3. Submit Your Prediction
+
+Enter your probability estimate (1%–99%) and confirm the transaction. Your bond is attached automatically.
+
+- **Bond** — a deposit that you put up with your prediction (typically 0.1 ETH)
+- **Your prediction** — your honest probability estimate for the outcome
+
+### 4. Wait for Resolution
+
+The market resolves through the SKC mechanism's random stop. After each prediction, there's an α% chance the market stops. When it does, the last prediction becomes the reference truth.
+
+### 5. Claim Your Payout
+
+Once resolved, go back to the market and claim your payout.
+
+- **Accurate prediction** → bond + scoring reward
+- **Inaccurate prediction** → partial or full bond loss
+- **Last predictor** → guaranteed bond + flat reward
+
+## Tips
+
+- **Be honest** — the math guarantees that truthful reporting maximizes your expected payout
+- **Be informed** — the more insight you have, the more you can earn by moving the price toward truth
+- **Bold moves pay more** — a large, correct price movement earns more than a small adjustment
+- **Max loss = bond** — you can never lose more than your bond amount`,
+
+  "markets/payouts": `# Payouts & Rewards
+
+How Yiling markets calculate and distribute rewards.
+
+## How Payouts Work
+
+Your payout depends on how much your prediction moved the market price toward truth:
+
+\`\`\`
+payout = max(0, bond + b × [S(qFinal, priceAfter) - S(qFinal, priceBefore)])
+\`\`\`
+
+Where S is the cross-entropy scoring function. In simple terms:
+
+- **You moved the price toward truth** → you earn a reward on top of your bond
+- **You moved the price away from truth** → you lose part or all of your bond
+- **You barely moved the price** → you get roughly your bond back
+
+## Example: Profitable Prediction
+
+\`\`\`
+Market price before you: 50%
+Your prediction: 75%
+Final truth (qFinal): 80%
+
+→ You moved the price toward truth (+25% in the right direction)
+→ Payout: 0.1 ETH bond + 0.186 ETH reward = 0.286 ETH (+186% profit)
+\`\`\`
+
+## Example: Unprofitable Prediction
+
+\`\`\`
+Market price before you: 70%
+Your prediction: 40%
+Final truth (qFinal): 80%
+
+→ You moved the price away from truth (-30% wrong direction)
+→ Payout: 0 ETH (bond lost)
+\`\`\`
+
+## Last-K Predictors
+
+The final k predictors (usually k=2) receive a guaranteed payout:
+
+\`\`\`
+payout = bond + flat reward (R)
+\`\`\`
+
+This incentivizes participation even in mature markets where the price is already near truth.
+
+## Key Takeaways
+
+| Rule | Detail |
+|------|--------|
+| Max loss | Your bond amount — never more |
+| Max gain | Unlimited (proportional to accuracy) |
+| Honesty pays | Truthful reporting is mathematically optimal |
+| Bold pays more | Large correct moves > small adjustments |
+| Late entry | Last k predictors always profit |`,
+
+  // ── BUILD ON YILING ───────────────────────────────────────────────────
+
+  "build/overview": `# Why Build on Yiling
+
+Yiling Protocol is the same infrastructure we use for our own prediction markets. It's open for anyone to build on.
+
+## What You Get
+
+- **Oracle-free resolution** — no dependency on Chainlink, UMA, or any external oracle
+- **Mathematically proven** — SKC mechanism based on [peer-reviewed Harvard research](https://arxiv.org/abs/2306.04305)
+- **Battle-tested** — the same contracts power our live markets on Base and Monad
+- **EVM-compatible** — deploy on any EVM chain
+- **Permissionless** — no API keys, no approval needed
+
+## What You Can Build
+
+| Application | How Yiling Helps |
+|-------------|-----------------|
+| **Prediction Markets** | Self-resolving markets, no oracle needed |
+| **DAO Governance** | Replace token voting with incentivized truth discovery |
+| **Dispute Resolution** | Decentralized arbitration without trusted judges |
+| **Data Labeling** | Incentivize honest labeling for AI training |
+| **Subjective Oracles** | On-chain oracle for questions no data feed can answer |
+| **Insurance** | Decentralized claims assessment |
+
+## Architecture
+
+Your application calls Yiling contracts to create markets and resolve questions. The contracts handle all the game theory, scoring, and payouts.
+
+\`\`\`
+┌─────────────────────┐
+│    YOUR APP          │
+│  (frontend / bot)    │
+└──────────┬──────────┘
+           │
+┌──────────▼──────────┐
+│   YILING CONTRACTS  │
+│  createMarket()     │
+│  predict()          │
+│  claimPayout()      │
+└──────────┬──────────┘
+           │
+    ┌──────▼──────┐
+    │  Base/Monad │
+    └─────────────┘
+\`\`\`
+
+## Gas Costs (Base)
+
+| Function | Gas | Approx Cost |
+|----------|-----|-------------|
+| \`createMarket()\` | ~250,000 | < $0.01 |
+| \`predict()\` | ~150,000–500,000 | < $0.01 |
+| \`claimPayout()\` | ~80,000 | < $0.001 |`,
+
+  "build/integration": `# Integration Guide
+
+How to integrate Yiling Protocol into your application.
+
+## Quick Start
+
+### 1. Connect to the Contracts
+
+\`\`\`javascript
+import { ethers } from "ethers";
+
+const provider = new ethers.JsonRpcProvider("https://mainnet.base.org");
+const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
+\`\`\`
+
+### 2. Create a Market
+
+\`\`\`javascript
+const tx = await contract.createMarket(
+  "Will ETH hit $10k by end of 2026?",  // question
+  ethers.parseEther("0.2"),              // alpha (20% stop probability)
+  2,                                      // k (last 2 get flat reward)
+  ethers.parseEther("0.01"),             // flat reward
+  ethers.parseEther("0.1"),              // bond amount
+  ethers.parseEther("1.0"),              // liquidity param
+  ethers.parseEther("0.5"),              // initial price (50%)
+  { value: ethers.parseEther("1.0") }    // fund the market pool
+);
+\`\`\`
+
+### 3. Submit a Prediction
+
+\`\`\`javascript
+await contract.predict(
+  0,                                     // market ID
+  ethers.parseEther("0.72"),             // 72% probability
+  { value: ethers.parseEther("0.1") }    // bond
+);
+\`\`\`
+
+### 4. Check Market Status & Claim
+
+\`\`\`javascript
+const info = await contract.getMarketInfo(0);
+const payout = await contract.getPayoutAmount(0, myAddress);
+await contract.claimPayout(0);
+\`\`\`
+
+## Using Foundry
+
+\`\`\`bash
+export CONTRACT=YOUR_CONTRACT_ADDRESS
+export RPC=https://mainnet.base.org
+
+# Read market count
+cast call $CONTRACT "getMarketCount()" --rpc-url $RPC
+
+# Submit prediction (72%)
+cast send $CONTRACT "predict(uint256,uint256)" 0 720000000000000000 \\
+  --value 0.1ether --private-key $KEY --rpc-url $RPC
+\`\`\`
+
+## Using web3.py
+
+\`\`\`python
+from web3 import Web3
+
+w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org"))
+contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=abi)
+
+count = contract.functions.getMarketCount().call()
+info = contract.functions.getMarketInfo(0).call()
 \`\`\`
 
 ## Integration Patterns
 
-**Pattern 1: Direct Contract Interaction** — Use any web3 library (ethers.js, viem, web3.py) to interact with deployed contracts on Base.
+**Pattern 1: Direct Interaction** — Your frontend or bot calls Yiling contracts directly to create and participate in markets.
 
-**Pattern 2: Build on Top** — Embed Yiling as a resolution primitive in your protocol. Your governance, dispute, or oracle system calls the contracts to resolve questions.
+**Pattern 2: Embedded Resolution** — Your protocol uses Yiling as a resolution primitive. Your governance or dispute system calls the contracts to resolve questions.
 
-**Pattern 3: Connect Agents** — Build AI agents that participate in markets, using any LLM or algorithm.`,
+**Pattern 3: AI Agents** — Build agents that participate in markets programmatically using any LLM or algorithm.`,
+
+  "build/contracts": `# Contract Reference
+
+Core contracts deployed on Base and Monad.
+
+## Contract Overview
+
+| Contract | Description |
+|----------|-------------|
+| \`PredictionMarket.sol\` | Core SKC logic — create markets, predict, resolve, claim |
+| \`MarketFactory.sol\` | Factory for deploying isolated PredictionMarket instances |
+| \`FixedPointMath.sol\` | Library for on-chain ln() and cross-entropy scoring |
+
+## Market Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Alpha (α) | 20% | Stop probability per prediction |
+| K | 2 | Last k predictors get flat reward |
+| Flat Reward (R) | 0.01 ETH | Reward per last-k predictor |
+| Bond | 0.1 ETH | Deposit per prediction |
+| Liquidity (b) | 1.0 ETH | LMSR scaling parameter |
+| Initial Price | 0.5 | Starting market price |
+
+## Write Functions
+
+### \`createMarket\`
+
+\`\`\`solidity
+function createMarket(
+    string calldata question,
+    uint256 alpha,
+    uint256 k,
+    uint256 flatReward,
+    uint256 bondAmount,
+    uint256 liquidityParam,
+    uint256 initialPrice
+) external payable returns (uint256 marketId)
+\`\`\`
+
+### \`predict\`
+
+\`\`\`solidity
+function predict(uint256 marketId, uint256 probability) external payable
+\`\`\`
+
+Submit a prediction with bond attached. One prediction per wallet per market.
+
+### \`claimPayout\`
+
+\`\`\`solidity
+function claimPayout(uint256 marketId) external
+\`\`\`
+
+### \`forceResolve\`
+
+\`\`\`solidity
+function forceResolve(uint256 marketId) external
+\`\`\`
+
+Force-resolve a stale market. Owner can call anytime, anyone can call after 2 days of inactivity.
+
+## Read Functions
+
+| Function | Returns | Description |
+|----------|---------|-------------|
+| \`getMarketCount()\` | uint256 | Total markets created |
+| \`getMarketInfo(id)\` | tuple | Core market data (question, price, status) |
+| \`getMarketParams(id)\` | tuple | Market configuration (alpha, k, bond, etc.) |
+| \`getPrediction(id, idx)\` | tuple | Specific prediction details |
+| \`getPayoutAmount(id, addr)\` | uint256 | Net payout amount (post-fee) |
+| \`isMarketActive(id)\` | bool | Whether market is accepting predictions |
+| \`hasPredicted(id, addr)\` | bool | Whether address has already predicted |
+
+## Events
+
+\`\`\`solidity
+event MarketCreated(uint256 indexed marketId, string question, ...)
+event PredictionMade(uint256 indexed marketId, address indexed predictor, ...)
+event MarketResolved(uint256 indexed marketId, uint256 finalPrice, ...)
+event PayoutClaimed(uint256 indexed marketId, address indexed predictor, ...)
+\`\`\`
+
+## Alpha Tuning Guide
+
+| Alpha | Avg Predictions | Best For |
+|-------|----------------|----------|
+| 10% | ~10 | Deep analysis, many participants |
+| 20% | ~5 | Balanced (default) |
+| 33% | ~3 | Quick resolution |
+| 50% | ~2 | Very fast, binary questions |`,
+
+  "build/fixed-point-math": `# FixedPointMath.sol
+
+On-chain fixed-point math library for cross-entropy scoring.
+
+## Usage
+
+\`\`\`solidity
+import {FixedPointMath} from "yiling-protocol/src/libraries/FixedPointMath.sol";
+\`\`\`
+
+## Functions
+
+### \`lnWad(uint256 x) → int256\`
+
+Computes ln(x) in WAD format. Reverts if x == 0.
+
+### \`crossEntropyScore(uint256 q, uint256 p) → int256\`
+
+\`S(q, p) = q × ln(p) + (1-q) × ln(1-p)\`
+
+### \`deltaPayout(uint256 qFinal, uint256 pBefore, uint256 pAfter) → int256\`
+
+Delta score for payouts. Positive = moved toward truth.
+
+## WAD Format
+
+All values use 1e18 fixed-point representation:
+
+\`\`\`
+1.0   = 1000000000000000000  (1e18)
+0.5   = 500000000000000000   (5e17)
+0.01  = 10000000000000000    (1e16)
+\`\`\`
+
+## Standalone Usage
+
+You can use FixedPointMath independently in your own contracts:
+
+\`\`\`solidity
+int256 result = FixedPointMath.lnWad(500000000000000000); // ln(0.5)
+// result = -693147180559945309
+\`\`\``,
 
   // ── USE CASES ─────────────────────────────────────────────────────────
 
@@ -572,22 +973,27 @@ The paper addresses prediction markets for outcomes that cannot be directly veri
 }
 \`\`\``,
 
-  // ── BASE NETWORK ─────────────────────────────────────────────────────────
+  // ── NETWORKS ──────────────────────────────────────────────────────────────
 
-  "base/overview": `# Why Base
+  "networks/base": `# Base
 
-Yiling Protocol is deployed and live on **Base** — Coinbase's Layer 2 network built on the OP Stack.
+Yiling is live on **Base** — Coinbase's Layer 2 network built on the OP Stack.
 
-## Why We Chose Base
+## Live Markets
+
+Explore and participate in active prediction markets on Base:
+
+**→ [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/)**
+
+## Why Base
 
 | Feature | Benefit |
 |---------|---------|
-| **Low Gas Fees** | Transactions cost fractions of a cent |
-| **EVM Compatible** | Full Solidity support, no contract modifications |
+| **Low Gas Fees** | Predictions cost fractions of a cent |
 | **Fast Finality** | ~2 second block times |
 | **Ethereum Security** | Inherits L1 security through optimistic rollup |
+| **EVM Compatible** | Full Solidity support |
 | **Growing Ecosystem** | Part of the largest onchain economy |
-| **Coinbase Integration** | Access to Coinbase's user base and infrastructure |
 
 ## Network Details
 
@@ -598,303 +1004,76 @@ Yiling Protocol is deployed and live on **Base** — Coinbase's Layer 2 network 
 | Explorer | [basescan.org](https://basescan.org) | [sepolia.basescan.org](https://sepolia.basescan.org) |
 | Gas Token | ETH | ETH |
 
-## Live Markets
+## Deployed Contracts
 
-Explore active prediction markets on Base:
+| Contract | Status | Explorer |
+|----------|--------|----------|
+| PredictionMarket | ✅ Live | [View on BaseScan](https://basescan.org) |
+| MarketFactory | ✅ Live | [View on BaseScan](https://basescan.org) |`,
 
-**[yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/)**
+  "networks/monad": `# Monad
 
-Markets are fully on-chain — every prediction, resolution, and payout is recorded on Base.`,
+Yiling is expanding to **Monad** — a high-performance EVM-compatible L1 with parallel execution.
 
-  "base/contracts": `# Contract Addresses
+## Why Monad
 
-Official Yiling Protocol deployment on Base.
+| Feature | Benefit |
+|---------|---------|
+| **10,000 TPS** | Handle high-frequency prediction markets |
+| **1s Finality** | Near-instant prediction confirmation |
+| **EVM Compatible** | Same Solidity contracts, no modifications needed |
+| **Parallel Execution** | Multiple markets can resolve simultaneously |
+| **Low Fees** | Micro-bond markets become practical at scale |
 
-## Base Mainnet
+## Status
 
-| Contract | Address | Explorer |
-|----------|---------|----------|
-| PredictionMarket | Deployed | [View on BaseScan](https://basescan.org) |
-| MarketFactory | Deployed | [View on BaseScan](https://basescan.org) |
+Monad deployment is live. Markets are being onboarded.
 
-## Base Sepolia (Testnet)
+## Same Contracts, Different Chain
 
-| Contract | Address | Explorer |
-|----------|---------|----------|
-| PredictionMarket | Deployed | [View on BaseScan](https://sepolia.basescan.org) |
-
-## Interacting with Contracts
-
-### Using ethers.js
-
-\`\`\`javascript
-import { ethers } from "ethers";
-
-const provider = new ethers.JsonRpcProvider("https://mainnet.base.org");
-const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
-
-// Read market count
-const count = await contract.getMarketCount();
-
-// Get market info
-const info = await contract.getMarketInfo(0);
-\`\`\`
-
-### Using Foundry (cast)
-
-\`\`\`bash
-export CONTRACT=YOUR_CONTRACT_ADDRESS
-export RPC=https://mainnet.base.org
-
-# Read market count
-cast call $CONTRACT "getMarketCount()" --rpc-url $RPC
-
-# Get market info
-cast call $CONTRACT "getMarketInfo(uint256)" 0 --rpc-url $RPC
-
-# Submit prediction (72%)
-cast send $CONTRACT "predict(uint256,uint256)" 0 720000000000000000 \\
-  --value 0.1ether --private-key $KEY --rpc-url $RPC
-\`\`\`
-
-### Using web3.py
-
-\`\`\`python
-from web3 import Web3
-
-w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org"))
-contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=abi)
-
-count = contract.functions.getMarketCount().call()
-info = contract.functions.getMarketInfo(0).call()
-\`\`\``,
-
-  // ── SMART CONTRACTS ──────────────────────────────────────────────────────
-
-  "contracts/overview": `# Smart Contracts
-
-The core protocol consists of three contracts deployed on Base.
-
-## Contract Overview
-
-| Contract | Description |
-|----------|-------------|
-| \`PredictionMarket.sol\` | Core SKC market logic — create markets, predict, resolve, claim |
-| \`MarketFactory.sol\` | Factory for deploying isolated PredictionMarket instances |
-| \`FixedPointMath.sol\` | Library for on-chain ln() and cross-entropy scoring |
-
-## Requirements
-
-- Solidity ^0.8.24
-- Foundry (forge, cast, anvil)
-
-## Gas Estimates (Base)
-
-| Function | Gas | Approx Cost |
-|----------|-----|-------------|
-| \`createMarket()\` | ~250,000 | < $0.01 |
-| \`predict()\` | ~150,000–500,000 | < $0.01 |
-| \`claimPayout()\` | ~80,000 | < $0.001 |
-
-Gas costs on Base are extremely low, making micro-bond prediction markets practical.
-
-## Market Parameters
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| Alpha (α) | 20% | Stop probability per prediction |
-| K | 2 | Last k agents get flat reward |
-| Flat Reward (R) | 0.01 ETH | Reward per last-k agent |
-| Bond | 0.1 ETH | Deposit per prediction |
-| Liquidity (b) | 1.0 ETH | LMSR scaling parameter |
-| Initial Price | 0.5 | Starting market price |
-
-## Alpha Tuning
-
-| Alpha | Avg Predictions | Use Case |
-|-------|----------------|----------|
-| 10% | ~10 | Deep analysis, many agents |
-| 20% | ~5 | Balanced (default) |
-| 33% | ~3 | Quick resolution |
-| 50% | ~2 | Very fast, binary |`,
-
-  "contracts/prediction-market": `# PredictionMarket.sol
-
-Core contract implementing the SKC mechanism. Deployed on Base.
-
-## Constants
-
-| Name | Value | Description |
-|------|-------|-------------|
-| WAD | 1e18 | Fixed-point precision |
-| MIN_PROBABILITY | 0.01e18 | Minimum prediction (1%) |
-| MAX_PROBABILITY | 0.99e18 | Maximum prediction (99%) |
-| MAX_FEE_BPS | 1000 | Maximum protocol fee (10%) |
-
-## Write Functions
-
-### \`createMarket\`
-
-\`\`\`solidity
-function createMarket(
-    string calldata question,
-    uint256 alpha,          // Stop probability (WAD)
-    uint256 k,              // Last k agents get flat reward
-    uint256 flatReward,     // Flat reward R (wei)
-    uint256 bondAmount,     // Bond per prediction (wei)
-    uint256 liquidityParam, // LMSR scaling b (wei)
-    uint256 initialPrice    // Starting price (WAD)
-) external payable returns (uint256 marketId)
-\`\`\`
-
-Creates a new prediction market. Must send sufficient ETH to fund the market pool.
-
-### \`predict\`
-
-\`\`\`solidity
-function predict(uint256 marketId, uint256 probability) external payable
-\`\`\`
-
-Submit a prediction with bond attached. Triggers random stop check after each call. One prediction per wallet per market.
-
-### \`claimPayout\`
-
-\`\`\`solidity
-function claimPayout(uint256 marketId) external
-\`\`\`
-
-Claim your payout from a resolved market. Payout = bond ± scoring reward/penalty.
-
-### \`forceResolve\`
-
-\`\`\`solidity
-function forceResolve(uint256 marketId) external
-\`\`\`
-
-Force-resolve a stale market. Owner can call anytime, anyone can call after 2 days of inactivity.
-
-## Read Functions
-
-| Function | Returns | Description |
-|----------|---------|-------------|
-| \`getMarketCount()\` | uint256 | Total markets created |
-| \`getMarketInfo(id)\` | tuple | Core market data (question, price, status) |
-| \`getMarketParams(id)\` | tuple | Market configuration (alpha, k, bond, etc.) |
-| \`getPrediction(id, idx)\` | tuple | Specific prediction details |
-| \`getPayoutAmount(id, addr)\` | uint256 | Net payout amount (post-fee) |
-| \`isMarketActive(id)\` | bool | Whether market is accepting predictions |
-| \`hasPredicted(id, addr)\` | bool | Whether address has already predicted |
-
-## Events
-
-\`\`\`solidity
-event MarketCreated(uint256 indexed marketId, string question, ...)
-event PredictionMade(uint256 indexed marketId, address indexed predictor, ...)
-event MarketResolved(uint256 indexed marketId, uint256 finalPrice, ...)
-event PayoutClaimed(uint256 indexed marketId, address indexed predictor, ...)
-\`\`\``,
-
-  "contracts/fixed-point-math": `# FixedPointMath.sol
-
-On-chain fixed-point math library for cross-entropy scoring.
-
-## Usage
-
-\`\`\`solidity
-import {FixedPointMath} from "yiling-protocol/src/libraries/FixedPointMath.sol";
-\`\`\`
-
-## Functions
-
-### \`lnWad(uint256 x) → int256\`
-
-Computes ln(x) in WAD format. Reverts if x == 0.
-
-### \`crossEntropyScore(uint256 q, uint256 p) → int256\`
-
-\`S(q, p) = q × ln(p) + (1-q) × ln(1-p)\`
-
-### \`deltaPayout(uint256 qFinal, uint256 pBefore, uint256 pAfter) → int256\`
-
-Delta score for payouts. Positive = moved toward truth. Used internally by PredictionMarket to calculate agent payouts.
-
-## WAD Format
-
-All values use 1e18 fixed-point representation:
-
-\`\`\`
-1.0   = 1000000000000000000  (1e18)
-0.5   = 500000000000000000   (5e17)
-0.01  = 10000000000000000    (1e16)
-\`\`\`
-
-## Standalone Usage
-
-You can use FixedPointMath independently in your own contracts:
-
-\`\`\`solidity
-int256 result = FixedPointMath.lnWad(500000000000000000); // ln(0.5)
-// result = -693147180559945309
-\`\`\``,
+Yiling's contracts are fully EVM-compatible. The same PredictionMarket, MarketFactory, and FixedPointMath contracts deployed on Base work on Monad without any modifications.`,
 
   // ── ROADMAP ──────────────────────────────────────────────────────────────
 
   "roadmap/coming-soon": `# Coming Soon
 
-Yiling Protocol is live on Base. Here's what's next.
+Yiling is live on Base and Monad. Here's what's next.
 
 ## Multi-Chain Expansion
 
-The protocol is EVM-compatible and can be deployed on any chain with minimal configuration. Planned deployments:
+| Chain | Status |
+|-------|--------|
+| **Base** | ✅ Live |
+| **Monad** | ✅ Live |
+| Arbitrum | Planned |
+| Optimism | Planned |
+| Polygon | Planned |
+| Other EVM | Under consideration |
 
-| Chain | Status | Timeline |
-|-------|--------|----------|
-| **Base** | ✅ Live | — |
-| Ethereum | Planned | Q2 2026 |
-| Arbitrum | Planned | Q2 2026 |
-| Optimism | Planned | Q2 2026 |
-| Monad | Planned | Q3 2026 |
-| Polygon | Planned | Q3 2026 |
-| Other EVM | Under consideration | TBD |
+> The protocol is EVM-compatible — deploying on a new chain requires no contract modifications.
 
-> Non-EVM chains (Solana, Sui, Aptos) require contract porting. The core SKC math is fully portable.
-
-## SDK & Developer Tools
+## Developer Tools
 
 | Tool | Description | Status |
 |------|-------------|--------|
+| TypeScript SDK | Client library with TypeScript types | In development |
 | Python SDK | Client library, agent runner | In development |
-| TypeScript SDK | Client library, TypeScript types | In development |
-| CLI | Command-line market interaction | In development |
 | REST API | HTTP endpoints for market data | Planned |
 | WebSocket | Real-time market event streaming | Planned |
 | Agent Framework | Multi-strategy AI agent toolkit | In development |
 
-## Agent Strategies
-
-Built-in AI agent personas under development:
-
-| Strategy | Approach |
-|----------|----------|
-| Analyst | Data-driven, reference class forecasting |
-| Bayesian | Explicit prior → likelihood → posterior |
-| Economist | Macro forces, incentives, structural trends |
-| Contrarian | Challenges consensus, detects groupthink |
-| Ensemble | Multi-model aggregation (GPT-4, Claude, Gemini) |
-
-## Protocol Features
+## Product Features
 
 - **Multi-outcome markets** — Beyond binary yes/no to categorical outcomes
 - **Continuous markets** — Real-valued predictions (prices, dates, quantities)
-- **Market templates** — Pre-configured market types for common use cases
+- **Market templates** — Pre-configured types for common use cases
+- **Mobile experience** — Optimized mobile UI for on-the-go predictions
+
+## Protocol Features
+
 - **Governance module** — Use Yiling for DAO decision-making
-- **Dispute resolution** — Integrate as an arbitration layer
-
-## Get Involved
-
-Follow development and updates:
-
-- Landing page: [GitHub](https://github.com/Muhammed5500/YilingProcotol-landing-OnBase)`,
+- **Dispute resolution layer** — Integrate as an arbitration primitive
+- **Cross-chain resolution** — Markets that aggregate data across chains`,
 };
 
 // ─── Page Component ──────────────────────────────────────────────────────────

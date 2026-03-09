@@ -72,14 +72,12 @@ function Navigation({ dark }: { dark?: boolean }) {
               {i}
             </a>
           ))}
-          <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer" className={`transition-colors duration-200 ${dark ? "hover:text-white" : "hover:text-text"}`}>Markets</a>
+          <a href="#networks" className={`transition-colors duration-200 ${dark ? "hover:text-white" : "hover:text-text"}`}>Markets</a>
           <a href="/docs/getting-started/overview" className={`transition-colors duration-200 ${dark ? "hover:text-white" : "hover:text-text"}`}>Docs</a>
         </div>
 
         <a
-          href="https://yilingmarket-onbase.vercel.app/"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#networks"
           className={`hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-500 ${
             dark ? "bg-white text-[#0a0a0f] hover:bg-gray-200" : "bg-text text-white hover:bg-accent-light"
           }`}
@@ -102,18 +100,44 @@ function Hero() {
             <span className="text-text">The Self-Resolving</span>
             <br />
             <span className="text-text-secondary">Truth Layer</span>
-            <br />
-            <span className="text-[#0052FF]" style={{ fontSize: "0.45em" }}>Live on Base</span>
           </motion.h1>
+
+          <motion.div variants={fadeUp} className="flex flex-col items-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-3">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0052FF]/10 border border-[#0052FF]/20 text-[#0052FF] text-[13px] font-semibold">
+                <span className="w-2 h-2 rounded-full bg-[#0052FF] animate-pulse" />
+                Base
+              </span>
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#836EF9]/10 border border-[#836EF9]/20 text-[#836EF9] text-[13px] font-semibold">
+                <span className="w-2 h-2 rounded-full bg-[#836EF9] animate-pulse" />
+                Monad
+              </span>
+            </div>
+            {/* Coming Soon Chains Marquee */}
+            <div className="relative w-full max-w-md overflow-hidden" style={{ maskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)" }}>
+              <div className="flex animate-[marquee_20s_linear_infinite] w-max gap-3">
+                {[...Array(2)].map((_, setIdx) => (
+                  <div key={setIdx} className="flex gap-3">
+                    {["Arbitrum", "Optimism", "Polygon", "Avalanche", "BNB Chain", "Scroll", "zkSync", "Linea", "Blast"].map((chain) => (
+                      <span key={`${setIdx}-${chain}`} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border text-text-muted text-[11px] font-medium whitespace-nowrap opacity-50">
+                        {chain}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-[10px] text-text-muted tracking-[0.15em] uppercase mt-1.5 font-medium">Coming Soon</p>
+            </div>
+          </motion.div>
 
           <motion.p variants={fadeUp} className="max-w-lg mx-auto text-[17px] text-text-secondary leading-relaxed">
             Oracle-free prediction markets where truth emerges
-            from game theory. Deployed and running on Base.
+            from game theory. Chain-agnostic infrastructure for any EVM network.
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
-              className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-[#0052FF] text-white text-[15px] font-semibold transition-all duration-200 hover:bg-[#003ECB] hover:scale-[1.02]">
+            <a href="#networks"
+              className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-text text-white text-[15px] font-semibold transition-all duration-200 hover:bg-accent-light hover:scale-[1.02]">
               Explore Live Markets
               <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </a>
@@ -126,7 +150,7 @@ function Hero() {
           <motion.div variants={fadeUp} className="flex items-center justify-center gap-12 pt-10">
             {[
               { value: "0", label: "Oracles Needed" },
-              { value: "Base", label: "Network" },
+              { value: "2", label: "Live Chains" },
               { value: "Game", label: "Theory" },
             ].map((stat, i) => (
               <div key={stat.label} className="text-center">
@@ -691,7 +715,7 @@ function Mechanism() {
 
 const infraFeatures = [
   { icon: Brain, title: "Open Agent Framework", desc: "Plug in any agent — AI, human, or algorithmic. Define your own reasoning strategy with our SDK." },
-  { icon: Globe, title: "Live on Base", desc: "Deployed and running on Base. Low gas costs make prediction markets accessible to everyone." },
+  { icon: Globe, title: "Multi-Chain", desc: "Deploy on any EVM chain. Currently live on Base and Monad with more networks coming soon." },
   { icon: Zap, title: "Self-Resolving Markets", desc: "No oracle dependency. Truth emerges from game theory via the SKC mechanism." },
   { icon: Code2, title: "Modular Smart Contracts", desc: "MarketFactory, PredictionMarket, and FixedPointMath — composable and auditable." },
   { icon: Users, title: "Permissionless Participation", desc: "Anyone can create markets, build agents, or integrate the protocol. No gatekeepers." },
@@ -756,9 +780,9 @@ const codeLines: CodeLine[] = [
   [{ text: "from", color: "#c084fc" }, { text: " web3 ", color: "#e4e4f0" }, { text: "import", color: "#c084fc" }, { text: " Web3", color: "#e4e4f0" }],
   [{ text: "from", color: "#c084fc" }, { text: " openai ", color: "#e4e4f0" }, { text: "import", color: "#c084fc" }, { text: " OpenAI", color: "#e4e4f0" }],
   [],
-  [{ text: "# Connect to Base", color: "#4a4a6a" }],
+  [{ text: "# Connect to any chain", color: "#4a4a6a" }],
   [{ text: "w3 ", color: "#e4e4f0" }, { text: "= ", color: "#60a5fa" }, { text: "Web3", color: "#e4e4f0" }, { text: "(", color: "#60a5fa" }, { text: "Web3", color: "#e4e4f0" }, { text: ".", color: "#60a5fa" }, { text: "HTTPProvider", color: "#60a5fa" }, { text: "(", color: "#60a5fa" }],
-  [{ text: '  "https://mainnet.base.org"', color: "#86efac" }],
+  [{ text: '  RPC_URL', color: "#86efac" }],
   [{ text: "))", color: "#60a5fa" }],
   [],
   [{ text: "# Submit prediction", color: "#4a4a6a" }],
@@ -840,7 +864,7 @@ function CodeTypewriter() {
 // ─── Builders ────────────────────────────────────────────────────────────────
 
 const builderCards = [
-  { icon: Globe, title: "Live on Base", desc: "The full contract suite is deployed and running on Base. Explore live markets or build on top.", link: "View Markets", href: "https://yilingmarket-onbase.vercel.app/" },
+  { icon: Globe, title: "Live Markets", desc: "The full contract suite is deployed and running on Base & Monad. Explore live markets or build on top.", link: "View Markets", href: "#networks" },
   { icon: Brain, title: "Connect an Agent", desc: "Build AI agents that participate in markets. Use any LLM, any language, any strategy.", link: "Learn More", href: "/docs/getting-started/how-it-works" },
   { icon: Cpu, title: "Smart Contracts", desc: "Fully on-chain SKC mechanism. Create markets, submit predictions, and claim payouts directly.", link: "View Docs", href: "/docs/contracts/overview" },
 ];
@@ -982,39 +1006,67 @@ function ChainTicker({ chains, reverse }: { chains: string[]; reverse?: boolean 
 
 function ChainAgnostic() {
   return (
-    <section className="relative py-28">
+    <section id="networks" className="relative py-28">
       <div className="relative mx-auto max-w-5xl text-center px-6">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, margin: "-80px" }} variants={stagger} className="space-y-4 mb-14">
-          <motion.p variants={fadeUp} className="text-text-muted text-[12px] font-semibold tracking-[0.2em] uppercase">Network</motion.p>
-          <motion.h2 variants={fadeUp} className="font-heading font-bold text-[30px] sm:text-[38px] md:text-[44px] tracking-tight">Live on Base</motion.h2>
-          <motion.p variants={fadeUp} className="text-text-secondary text-[16px]">Deployed and running on Base. More chains coming soon.</motion.p>
+          <motion.p variants={fadeUp} className="text-text-muted text-[12px] font-semibold tracking-[0.2em] uppercase">Networks</motion.p>
+          <motion.h2 variants={fadeUp} className="font-heading font-bold text-[30px] sm:text-[38px] md:text-[44px] tracking-tight">Chain-Agnostic Infrastructure</motion.h2>
+          <motion.p variants={fadeUp} className="text-text-secondary text-[16px]">One protocol, multiple chains. Deploy prediction markets anywhere.</motion.p>
         </motion.div>
 
-        {/* Base primary card */}
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
-          className="card p-8 border-[#0052FF]/30 mb-8 max-w-lg mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <svg viewBox="0 0 24 24" className="w-12 h-12">
-              <circle cx="12" cy="12" r="10" fill="#0052FF"/>
-              <path d="M12 6a6 6 0 100 12 6 6 0 000-12zm0 2a4 4 0 110 8V8z" fill="#fff"/>
-            </svg>
-            <div className="text-left">
-              <h3 className="font-heading font-bold text-[22px] text-text">Base</h3>
-              <p className="text-[#0052FF] text-[13px] font-semibold">Active · Live Markets</p>
+        {/* Active chains */}
+        <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
+          {/* Base */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
+            className="card p-8 border-[#0052FF]/30">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <svg viewBox="0 0 24 24" className="w-12 h-12">
+                <circle cx="12" cy="12" r="10" fill="#0052FF"/>
+                <path d="M12 6a6 6 0 100 12 6 6 0 000-12zm0 2a4 4 0 110 8V8z" fill="#fff"/>
+              </svg>
+              <div className="text-left">
+                <h3 className="font-heading font-bold text-[22px] text-text">Base</h3>
+                <p className="text-[#0052FF] text-[13px] font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#0052FF] animate-pulse" />
+                  Active · Live Markets
+                </p>
+              </div>
             </div>
-          </div>
-          <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0052FF] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
-            Explore Markets <ArrowRight className="w-4 h-4" />
-          </a>
-        </motion.div>
+            <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0052FF] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
+              Explore on Base <ArrowRight className="w-4 h-4" />
+            </a>
+          </motion.div>
 
-        {/* Why Base cards */}
+          {/* Monad */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
+            className="card p-8 border-[#836EF9]/30">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <svg viewBox="0 0 24 24" className="w-12 h-12">
+                <circle cx="12" cy="12" r="10" fill="#836EF9"/>
+                <text x="12" y="16" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="bold">M</text>
+              </svg>
+              <div className="text-left">
+                <h3 className="font-heading font-bold text-[22px] text-text">Monad</h3>
+                <p className="text-[#836EF9] text-[13px] font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#836EF9] animate-pulse" />
+                  Active · Live Markets
+                </p>
+              </div>
+            </div>
+            <a href="https://yiling-protocol.vercel.app/" target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#836EF9] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
+              Explore on Monad <ArrowRight className="w-4 h-4" />
+            </a>
+          </motion.div>
+        </div>
+
+        {/* Why multi-chain cards */}
         <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
           {[
-            { title: "Low Gas Fees", desc: "Transactions cost fractions of a cent on Base L2" },
-            { title: "EVM Compatible", desc: "Full Solidity support with Ethereum security" },
-            { title: "Growing Ecosystem", desc: "Part of the largest onchain economy" },
+            { title: "EVM Compatible", desc: "Deploy on any EVM chain with the same Solidity contracts" },
+            { title: "One-Line Deploy", desc: "Same contract suite, different RPC — deploy in seconds" },
+            { title: "Growing Network", desc: "More chains coming soon as the protocol expands" },
           ].map((item) => (
             <motion.div key={item.title} initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
               className="card p-5 text-left">
@@ -1024,8 +1076,7 @@ function ChainAgnostic() {
           ))}
         </div>
 
-        {/* Coming soon */}
-        <p className="text-text-muted text-[13px]">More chains coming soon · EVM compatible · One-line deployment</p>
+        <p className="text-text-muted text-[13px]">Any EVM chain · Same contracts · Permissionless deployment</p>
       </div>
     </section>
   );
@@ -1045,11 +1096,11 @@ function CTA() {
               <span className="text-text-secondary">oracle-free markets?</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-text-secondary text-[16px] max-w-md mx-auto leading-relaxed">
-              Yiling Protocol is live on Base. Explore prediction markets that resolve themselves through game theory.
+              Yiling Protocol is live on Base & Monad. Explore prediction markets that resolve themselves through game theory.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
-                className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-[#0052FF] text-white text-[15px] font-semibold transition-all duration-200 hover:brightness-110 hover:scale-[1.02]">
+              <a href="#networks"
+                className="group flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-text text-white text-[15px] font-semibold transition-all duration-200 hover:brightness-110 hover:scale-[1.02]">
                 Explore Live Markets <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </a>
               <a href="https://github.com/Muhammed5500/YilingProcotol-landing-OnBase" target="_blank" rel="noopener noreferrer"
@@ -1151,7 +1202,7 @@ function Footer() {
               </div>
               <span className="font-heading font-bold text-[17px] text-text">Yiling Protocol</span>
             </div>
-            <p className="text-text-muted text-[14px] leading-[1.8] max-w-sm">Oracle-free prediction markets live on Base. Built on Harvard&apos;s SKC mechanism.</p>
+            <p className="text-text-muted text-[14px] leading-[1.8] max-w-sm">Oracle-free prediction markets on any chain. Built on Harvard&apos;s SKC mechanism.</p>
             <div className="flex items-center gap-3">
               <a href="https://github.com/Muhammed5500/YilingProcotol-landing-OnBase" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-lg border border-border flex items-center justify-center text-text-muted hover:text-text hover:border-border-light transition-all duration-200">
                 <Github className="w-4.5 h-4.5" />
@@ -1185,7 +1236,7 @@ export default function Home() {
       <Hero />
 
       <MarqueeBand items={[
-        "ORACLE-FREE", "SELF-RESOLVING", "LIVE ON BASE", "GAME THEORY",
+        "ORACLE-FREE", "SELF-RESOLVING", "MULTI-CHAIN", "GAME THEORY",
         "SKC MECHANISM", "CROSS-ENTROPY", "EVM COMPATIBLE",
         "PERMISSIONLESS", "PREDICTION MARKETS", "TRUTH LAYER"
       ]} />
@@ -1199,7 +1250,7 @@ export default function Home() {
       <MarqueeBand
         reverse
         items={[
-          "DEPLOYED ON BASE", "ANY AGENT", "LOW GAS", "ANY QUESTION",
+          "CHAIN AGNOSTIC", "ANY AGENT", "LOW GAS", "ANY QUESTION",
           "MODULAR CONTRACTS", "REST API", "WEBSOCKET", "FOUNDRY",
           "HARVARD RESEARCH", "BAYESIAN EQUILIBRIUM"
         ]}
