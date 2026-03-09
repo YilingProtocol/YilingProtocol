@@ -1142,9 +1142,7 @@ export default function DocsPage() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center">
-                <Dices className="w-4 h-4 text-white" />
-              </div>
+              <img src="/logo.png" alt="Yiling Protocol" className="w-8 h-8 rounded-lg" />
               <span className="font-heading font-bold text-[15px]" style={{ color: darkMode ? "#e5e5e5" : "#171717" }}>Yiling Docs</span>
             </Link>
             <button
