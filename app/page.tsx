@@ -1034,7 +1034,7 @@ function ChainAgnostic() {
             </div>
             <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0052FF] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
-              Explore on Base <ArrowRight className="w-4 h-4" />
+              Explore Markets <ArrowRight className="w-4 h-4" />
             </a>
           </motion.div>
 
@@ -1054,9 +1054,9 @@ function ChainAgnostic() {
                 </p>
               </div>
             </div>
-            <a href="https://yiling-protocol.vercel.app/" target="_blank" rel="noopener noreferrer"
+            <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#836EF9] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
-              Explore on Monad <ArrowRight className="w-4 h-4" />
+              Explore Markets <ArrowRight className="w-4 h-4" />
             </a>
           </motion.div>
         </div>

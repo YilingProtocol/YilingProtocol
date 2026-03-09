@@ -108,7 +108,7 @@ Based on [peer-reviewed research](https://arxiv.org/abs/2306.04305) from Harvard
 ### 1. Trade on Our Markets
 Yiling runs live prediction markets on **Base** and **Monad**. You can explore markets, submit your predictions, and earn rewards for accuracy — no oracle needed.
 
-→ [Explore Markets on Base](https://yilingmarket-onbase.vercel.app/)
+→ [Explore Markets](https://yilingmarket-onbase.vercel.app/)
 
 ### 2. Build Your Own
 The same infrastructure powering our markets is available for you to build on. Create your own prediction markets, governance systems, dispute resolution, or anything that needs decentralized truth discovery.
@@ -162,7 +162,7 @@ Anyone. Yiling markets are permissionless:
 \`\`\`
 ┌─────────────────────────────────────────────────┐
 │              YILING MARKETS (our app)            │
-│     Base: yilingmarket-onbase.vercel.app         │
+│     yilingmarket-onbase.vercel.app                │
 └───────────────────┬─────────────────────────────┘
                     │
         ┌───────────┼───────────┐
@@ -189,8 +189,7 @@ Yiling runs live prediction markets on multiple chains. Browse open markets, see
 
 | Chain | Status | Link |
 |-------|--------|------|
-| **Base** | ✅ Live | [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/) |
-| **Monad** | ✅ Live | Coming soon |
+| **Base & Monad** | ✅ Live | [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/) |
 
 ## What You'll Find
 
@@ -225,7 +224,7 @@ Step-by-step guide to participating in Yiling prediction markets.
 
 ### 1. Connect Your Wallet
 
-Go to [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/) and connect your wallet. Make sure you're on the Base network.
+Go to [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/) and connect your wallet. Select your network (Base or Monad) from the app.
 
 ### 2. Browse Markets
 
@@ -981,9 +980,9 @@ Yiling is live on **Base** — Coinbase's Layer 2 network built on the OP Stack.
 
 ## Live Markets
 
-Explore and participate in active prediction markets on Base:
+Explore and participate in active prediction markets:
 
-**→ [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/)**
+**→ [yilingmarket-onbase.vercel.app](https://yilingmarket-onbase.vercel.app/)** (Base & Monad)
 
 ## Why Base
 
