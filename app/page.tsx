@@ -1014,52 +1014,43 @@ function ChainAgnostic() {
           <motion.p variants={fadeUp} className="text-text-secondary text-[16px]">One protocol, multiple chains. Deploy prediction markets anywhere.</motion.p>
         </motion.div>
 
-        {/* Active chains */}
-        <div className="grid sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
-          {/* Base */}
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
-            className="card p-8 border-[#0052FF]/30">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <svg viewBox="0 0 24 24" className="w-12 h-12">
+        {/* Active chains — unified */}
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
+          className="card p-8 max-w-lg mx-auto mb-10">
+          <div className="flex items-center justify-center gap-6 mb-5">
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 24 24" className="w-10 h-10">
                 <circle cx="12" cy="12" r="10" fill="#0052FF"/>
                 <path d="M12 6a6 6 0 100 12 6 6 0 000-12zm0 2a4 4 0 110 8V8z" fill="#fff"/>
               </svg>
               <div className="text-left">
-                <h3 className="font-heading font-bold text-[22px] text-text">Base</h3>
-                <p className="text-[#0052FF] text-[13px] font-semibold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#0052FF] animate-pulse" />
-                  Active · Live Markets
+                <h3 className="font-heading font-bold text-[17px] text-text">Base</h3>
+                <p className="text-[#0052FF] text-[11px] font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0052FF] animate-pulse" />
+                  Live
                 </p>
               </div>
             </div>
-            <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#0052FF] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
-              Explore Markets <ArrowRight className="w-4 h-4" />
-            </a>
-          </motion.div>
-
-          {/* Monad */}
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
-            className="card p-8 border-[#836EF9]/30">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <svg viewBox="0 0 24 24" className="w-12 h-12">
+            <span className="text-text-muted text-[20px]">·</span>
+            <div className="flex items-center gap-3">
+              <svg viewBox="0 0 24 24" className="w-10 h-10">
                 <circle cx="12" cy="12" r="10" fill="#836EF9"/>
                 <text x="12" y="16" textAnchor="middle" fill="#fff" fontSize="11" fontWeight="bold">M</text>
               </svg>
               <div className="text-left">
-                <h3 className="font-heading font-bold text-[22px] text-text">Monad</h3>
-                <p className="text-[#836EF9] text-[13px] font-semibold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#836EF9] animate-pulse" />
-                  Active · Live Markets
+                <h3 className="font-heading font-bold text-[17px] text-text">Monad</h3>
+                <p className="text-[#836EF9] text-[11px] font-semibold flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#836EF9] animate-pulse" />
+                  Live
                 </p>
               </div>
             </div>
-            <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-[#836EF9] text-white text-[14px] font-semibold hover:brightness-110 transition-all duration-200">
-              Explore Markets <ArrowRight className="w-4 h-4" />
-            </a>
-          </motion.div>
-        </div>
+          </div>
+          <a href="https://yilingmarket-onbase.vercel.app/" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-text text-white text-[14px] font-semibold hover:bg-accent-light hover:scale-[1.02] transition-all duration-200">
+            Explore Markets <ArrowRight className="w-4 h-4" />
+          </a>
+        </motion.div>
 
         {/* Why multi-chain cards */}
         <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
