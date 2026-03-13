@@ -26,4 +26,4 @@ Based on peer-reviewed research from Harvard, published at ACM EC 2025.
 
 ## License
 
-MIT.
+AGPL-3.0

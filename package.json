@@ -10,7 +10,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0",
   "type": "module",
   "dependencies": {
     "@react-three/fiber": "^9.5.0",
