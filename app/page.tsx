@@ -61,7 +61,7 @@ function Navigation({ dark }: { dark?: boolean }) {
     >
       <div className="mx-auto max-w-6xl px-6 flex items-center justify-between h-[72px]">
         <div className="flex items-center gap-3">
-          <Image src="/logo.png" alt="Yiling Protocol" width={32} height={32} className="rounded-lg" />
+          <Image src="/logo.svg" alt="Yiling Protocol" width={32} height={32} className="rounded-lg" />
           <span className={`font-heading font-bold text-[16px] tracking-tight transition-colors duration-500 ${dark ? "text-white" : "text-text"}`}>Yiling Protocol</span>
         </div>
 
