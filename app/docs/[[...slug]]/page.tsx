@@ -35,11 +35,11 @@ const docsTree = [
     ],
   },
   {
-    title: "Use Markets",
+    title: "Using the Protocol",
     icon: Users,
     items: [
-      { slug: "markets/explore", title: "Explore Markets" },
-      { slug: "markets/how-to-predict", title: "How to Predict" },
+      { slug: "markets/explore", title: "Applications" },
+      { slug: "markets/how-to-predict", title: "How Reporting Works" },
       { slug: "markets/payouts", title: "Payouts & Rewards" },
     ],
   },
@@ -100,19 +100,17 @@ const docsContent: Record<string, string> = {
 
 ## What is Yiling?
 
-Yiling is **truth discovery infrastructure** — a protocol that resolves outcomes no oracle can answer. Built on Monad, the same infrastructure is open for anyone to build on.
+Yiling is **truth discovery infrastructure** — a protocol that resolves outcomes no oracle can answer. The infrastructure is open for anyone to build on, deployable on any EVM chain.
 
 Based on [peer-reviewed research](https://arxiv.org/abs/2306.04305) from Harvard (published at ACM EC 2025), the protocol implements the SKC mechanism — a mathematically proven system where truth emerges from game theory, not external oracles.
 
 ## Two Ways to Use Yiling
 
-### 1. Explore Yiling Market
-Yiling Market is the first application built on the protocol. Explore live markets, submit predictions, and earn rewards for accuracy — no oracle needed.
-
-→ [Explore Markets](https://yilingmarket.vercel.app/)
+### 1. Use an Application Built on Yiling
+Applications built on the protocol let users explore live markets, submit predictions, and earn rewards for accuracy — no oracle needed.
 
 ### 2. Build on the Protocol
-The same infrastructure is available for anyone. Build prediction markets, governance systems, dispute resolution, content verification, or anything that needs decentralized truth discovery.
+The infrastructure is available for anyone. Build prediction markets, governance systems, dispute resolution, content verification, or anything that needs decentralized truth discovery.
 
 → [Integration Guide](/docs/build/overview)
 
@@ -122,11 +120,11 @@ Every prediction market today depends on an external oracle to decide what's tru
 
 Yiling removes the oracle entirely:
 
-- **Self-resolving** — markets close themselves through probabilistic stopping
+- **Self-resolving** — queries close themselves through probabilistic stopping
 - **Truthful equilibrium** — honest reporting is a Perfect Bayesian Equilibrium
 - **Cross-entropy scoring** — earn rewards proportional to your accuracy
-- **Bond-based** — every prediction requires a deposit, creating skin in the game
-- **Live now** — deployed on Monad with low gas fees`,
+- **Bond-based** — every report requires a deposit, creating skin in the game
+- **EVM-compatible** — deploy on any EVM chain`,
 
   "getting-started/how-it-works": `# How It Works
 
@@ -152,7 +150,7 @@ Every predictor could be the last one, and the last predictor's report *becomes*
 
 ## Who Can Participate?
 
-Anyone. Yiling markets are permissionless:
+Anyone. Yiling queries are permissionless:
 
 - **Humans** — connect your wallet and submit predictions directly
 - **AI Agents** — any LLM, algorithm, or bot can participate programmatically
@@ -162,13 +160,9 @@ Anyone. Yiling markets are permissionless:
 
 \`\`\`
 ┌─────────────────────────────────────────────────┐
-│              YILING MARKETS (our app)            │
-│     yilingmarket.vercel.app                │
+│           YOUR APPLICATION / AGENT              │
+│     (prediction market, governance, etc.)       │
 └───────────────────┬─────────────────────────────┘
-                    │
-        ┌───────────┼───────────┐
-        │     YOUR APP / AGENT  │  ← you can build here too
-        └───────────┼───────────┘
                     │
         ┌───────────▼───────────┐
         │    YILING CONTRACTS   │
@@ -176,79 +170,75 @@ Anyone. Yiling markets are permissionless:
         └───────────┬───────────┘
                     │
            ┌────────▼────────┐
-           │     Monad       │
+           │   EVM Chain     │
            └─────────────────┘
 \`\`\``,
 
   // ── USE MARKETS ───────────────────────────────────────────────────────
 
-  "markets/explore": `# Explore Markets
+  "markets/explore": `# Applications
 
-Yiling runs live prediction markets on multiple chains. Browse open markets, see current probabilities, and submit your own predictions.
+Any application can be built on Yiling Protocol. The protocol provides truth discovery infrastructure — applications built on top define the user experience.
 
-## Live Markets
+## What Applications Can Do
 
-| Chain | Status | Link |
-|-------|--------|------|
-| **Monad** | ✅ Live | [yilingmarket.vercel.app](https://yilingmarket.vercel.app/) |
+Applications built on Yiling can present users with:
 
-## What You'll Find
+- **Question** — what's being resolved
+- **Current price** — the protocol's current probability estimate (0–100%)
+- **Number of reports** — how many participants have contributed
+- **Bond amount** — how much is deposited per report
+- **Status** — active (accepting reports) or resolved (payouts available)
 
-Each market has:
+## Query Types
 
-- **Question** — what's being predicted
-- **Current price** — the market's current probability estimate (0–100%)
-- **Number of predictions** — how many people have participated
-- **Bond amount** — how much you need to deposit to predict
-- **Status** — active (accepting predictions) or resolved (payouts available)
-
-## Market Types
-
-Yiling markets can cover any question — especially ones that traditional oracles can't handle:
+Yiling-powered applications can resolve any question — especially ones that traditional oracles cannot handle:
 
 - **Subjective questions** — "Is this NFT derivative art or original?"
 - **Long-horizon forecasts** — "Will AI surpass human reasoning by 2030?"
 - **Unverifiable outcomes** — questions with no objective data feed
-- **Standard predictions** — crypto prices, events, elections`,
+- **Standard predictions** — crypto prices, events, elections
+- **Governance decisions** — "Should the DAO fund this proposal?"
+- **Dispute resolution** — "Did the contractor deliver as specified?"`,
 
-  "markets/how-to-predict": `# How to Predict
+  "markets/how-to-predict": `# How Reporting Works
 
-Step-by-step guide to participating in Yiling prediction markets.
+Step-by-step guide to participating in Yiling Protocol queries.
 
 ## Requirements
 
 - A wallet (MetaMask, Coinbase Wallet, etc.)
-- MON on Monad (for gas + bond)
+- Native tokens on the deployed chain (for gas + bond)
 - That's it — no signup, no KYC
 
 ## Steps
 
 ### 1. Connect Your Wallet
 
-Go to [yilingmarket.vercel.app](https://yilingmarket.vercel.app/) and connect your wallet. Connect your wallet to Monad Testnet.
+Connect your wallet to an application built on Yiling Protocol, or interact with the contracts directly.
 
-### 2. Browse Markets
+### 2. Browse Active Queries
 
-Explore active markets and find a question you have insight on. Check the current market price — this is the crowd's current probability estimate.
+Explore active queries and find a question you have insight on. Check the current price — this is the crowd's current probability estimate.
 
-### 3. Submit Your Prediction
+### 3. Submit Your Report
 
 Enter your probability estimate (1%–99%) and confirm the transaction. Your bond is attached automatically.
 
-- **Bond** — a deposit that you put up with your prediction (set per market, e.g. 0.01 MON)
-- **Your prediction** — your honest probability estimate for the outcome
+- **Bond** — a deposit that you put up with your report (configured per query)
+- **Your report** — your honest probability estimate for the outcome
 
 ### 4. Wait for Resolution
 
-The market resolves through the SKC mechanism's random stop. After each prediction, there's an α% chance the market stops. When it does, the last prediction becomes the reference truth.
+The query resolves through the SKC mechanism's random stop. After each report, there's an alpha% chance the query stops. When it does, the last report becomes the reference truth.
 
 ### 5. Claim Your Payout
 
-Once resolved, go back to the market and claim your payout.
+Once resolved, claim your payout through the application or directly from the contract.
 
-- **Accurate prediction** → bond + scoring reward
-- **Inaccurate prediction** → partial or full bond loss
-- **Last predictor** → guaranteed bond + flat reward
+- **Accurate report** → bond + scoring reward
+- **Inaccurate report** → partial or full bond loss
+- **Last reporter** → guaranteed bond + flat reward
 
 ## Tips
 
@@ -259,11 +249,11 @@ Once resolved, go back to the market and claim your payout.
 
   "markets/payouts": `# Payouts & Rewards
 
-How Yiling markets calculate and distribute rewards.
+How Yiling Protocol calculates and distributes rewards.
 
 ## How Payouts Work
 
-Your payout depends on how much your prediction moved the market price toward truth:
+Your payout depends on how much your report moved the price toward truth:
 
 \`\`\`
 payout = max(0, bond + b × [S(qFinal, priceAfter) - S(qFinal, priceBefore)])
@@ -275,37 +265,37 @@ Where S is the cross-entropy scoring function. In simple terms:
 - **You moved the price away from truth** → you lose part or all of your bond
 - **You barely moved the price** → you get roughly your bond back
 
-## Example: Profitable Prediction
+## Example: Profitable Report
 
 \`\`\`
-Market price before you: 50%
-Your prediction: 75%
+Price before you: 50%
+Your report: 75%
 Final truth (qFinal): 80%
 
 → You moved the price toward truth (+25% in the right direction)
-→ Payout: 0.01 MON bond + 0.0186 MON reward = 0.0286 MON (+186% profit)
+→ Payout: bond + 186% reward (e.g. 0.01 bond → 0.0286 total)
 \`\`\`
 
-## Example: Unprofitable Prediction
+## Example: Unprofitable Report
 
 \`\`\`
-Market price before you: 70%
-Your prediction: 40%
+Price before you: 70%
+Your report: 40%
 Final truth (qFinal): 80%
 
 → You moved the price away from truth (-30% wrong direction)
-→ Payout: 0 MON (bond lost)
+→ Payout: 0 (bond lost)
 \`\`\`
 
-## Last-K Predictors
+## Last-K Reporters
 
-The final k predictors (usually k=2) receive a guaranteed payout:
+The final k reporters (configurable, e.g. k=2) receive a guaranteed payout:
 
 \`\`\`
 payout = bond + flat reward (R)
 \`\`\`
 
-This incentivizes participation even in mature markets where the price is already near truth.
+This incentivizes participation even in mature queries where the price is already near truth.
 
 ## Key Takeaways
 
@@ -315,19 +305,19 @@ This incentivizes participation even in mature markets where the price is alread
 | Max gain | Unlimited (proportional to accuracy) |
 | Honesty pays | Truthful reporting is mathematically optimal |
 | Bold pays more | Large correct moves > small adjustments |
-| Late entry | Last k predictors always profit |`,
+| Late entry | Last k reporters always profit |`,
 
   // ── BUILD ON YILING ───────────────────────────────────────────────────
 
   "build/overview": `# Why Build on Yiling
 
-Yiling Protocol is the same infrastructure we use for our own prediction markets. It's open for anyone to build on.
+Yiling Protocol is open truth discovery infrastructure. It's available for anyone to build on — no API keys, no approval needed.
 
 ## What You Get
 
 - **Oracle-free resolution** — no dependency on Chainlink, UMA, or any external oracle
 - **Mathematically proven** — SKC mechanism based on [peer-reviewed Harvard research](https://arxiv.org/abs/2306.04305)
-- **Battle-tested** — the same contracts power our live markets on Monad
+- **Production-ready** — deployed and tested on EVM chains
 - **EVM-compatible** — deploy on any EVM chain
 - **Permissionless** — no API keys, no approval needed
 
@@ -361,17 +351,19 @@ Your application calls Yiling contracts to create markets and resolve questions.
 └──────────┬──────────┘
            │
     ┌──────▼──────┐
-    │    Monad    │
+    │  EVM Chain  │
     └─────────────┘
 \`\`\`
 
-## Gas Costs (Monad)
+## Example Gas Costs
 
-| Function | Gas | Approx Cost |
-|----------|-----|-------------|
-| \`createMarket()\` | ~250,000 | < $0.01 |
-| \`predict()\` | ~150,000–500,000 | < $0.01 |
-| \`claimPayout()\` | ~80,000 | < $0.001 |`,
+Gas costs vary by chain. Below are approximate values for reference:
+
+| Function | Approx Gas |
+|----------|-----------|
+| \`createMarket()\` | ~250,000 |
+| \`predict()\` | ~150,000–500,000 |
+| \`claimPayout()\` | ~80,000 |`,
 
   "build/integration": `# Integration Guide
 
@@ -384,8 +376,8 @@ How to integrate Yiling Protocol into your application.
 \`\`\`javascript
 import { ethers } from "ethers";
 
-const provider = new ethers.JsonRpcProvider("https://testnet-rpc.monad.xyz");
-const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, provider);
+const provider = new ethers.JsonRpcProvider("YOUR_RPC_URL");
+const contract = new ethers.Contract("YOUR_CONTRACT_ADDRESS", abi, provider);
 \`\`\`
 
 ### 2. Create a Market
@@ -425,7 +417,7 @@ await contract.claimPayout(0);
 
 \`\`\`bash
 export CONTRACT=YOUR_CONTRACT_ADDRESS
-export RPC=https://testnet-rpc.monad.xyz
+export RPC=YOUR_RPC_URL
 
 # Read market count
 cast call $CONTRACT "getMarketCount()" --rpc-url $RPC
@@ -440,8 +432,8 @@ cast send $CONTRACT "predict(uint256,uint256)" 0 720000000000000000 \\
 \`\`\`python
 from web3 import Web3
 
-w3 = Web3(Web3.HTTPProvider("https://testnet-rpc.monad.xyz"))
-contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=abi)
+w3 = Web3(Web3.HTTPProvider("YOUR_RPC_URL"))
+contract = w3.eth.contract(address="YOUR_CONTRACT_ADDRESS", abi=abi)
 
 count = contract.functions.getMarketCount().call()
 info = contract.functions.getMarketInfo(0).call()
@@ -457,7 +449,7 @@ info = contract.functions.getMarketInfo(0).call()
 
   "build/contracts": `# Contract Reference
 
-Core contracts deployed on Monad.
+Core contracts for Yiling Protocol.
 
 ## Contract Overview
 
@@ -469,14 +461,14 @@ Core contracts deployed on Monad.
 
 ## Market Parameters
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| Alpha (α) | 20% | Stop probability per prediction |
-| K | 2 | Last k predictors get flat reward |
-| Flat Reward (R) | 0.005 MON | Reward per last-k predictor |
-| Bond | 0.01 MON | Deposit per prediction |
-| Liquidity (b) | 0.1 MON | LMSR scaling parameter |
-| Initial Price | 0.5 | Starting market price |
+| Parameter | Description | Acceptable Range |
+|-----------|-------------|-----------------|
+| Alpha (α) | Stop probability per report | 0 < α < 1 (commonly 10%–50%) |
+| K | Last k reporters get flat reward | k ≥ 1 (integer) |
+| Flat Reward (R) | Reward per last-k reporter | R > 0 |
+| Bond | Deposit per report | Bond > 0 |
+| Liquidity (b) | LMSR scaling parameter | b > 0 |
+| Initial Price | Starting price | 0 < price < 1 |
 
 ## Write Functions
 
@@ -542,7 +534,7 @@ event PayoutClaimed(uint256 indexed marketId, address indexed predictor, ...)
 | Alpha | Avg Predictions | Best For |
 |-------|----------------|----------|
 | 10% | ~10 | Deep analysis, many participants |
-| 20% | ~5 | Balanced (default) |
+| 20% | ~5 | Balanced |
 | 33% | ~3 | Quick resolution |
 | 50% | ~2 | Very fast, binary questions |`,
 
@@ -617,7 +609,7 @@ Create market → Agents submit predictions → Random stop check
 | Resolution | External oracle | Self-resolving (SKC) |
 | Oracle manipulation | Possible (UMA 2025) | Impossible — no oracle |
 | Subjective questions | Limited | Native support |
-| Deployment | Centralized | Permissionless on Monad |
+| Deployment | Centralized | Permissionless on any EVM chain |
 | Truthfulness | Not guaranteed | Perfect Bayesian Equilibrium |
 
 ## Best For
@@ -835,9 +827,9 @@ Content flagged as potentially misleading
 Market created: "Is this content misleading?"
         ↓
 Reporters stake bonds and submit probability estimates
-   Agent A: 85% misleading (bond: 0.1 MON)
-   Agent B: 20% misleading (bond: 0.1 MON)
-   Agent C: 78% misleading (bond: 0.1 MON)
+   Agent A: 85% misleading (bond attached)
+   Agent B: 20% misleading (bond attached)
+   Agent C: 78% misleading (bond attached)
         ↓
 Random stop triggers → SKC scoring kicks in
         ↓
@@ -886,7 +878,7 @@ Each claim gets its own market. Results are displayed per-claim:
 The most powerful configuration combines both:
 
 **Layer 1 — AI Agents (instant response)**
-When content is flagged, AI agents analyze it immediately. Within seconds, a preliminary signal is available. These agents can use different reasoning strategies — evidence-based, statistical, adversarial — just like the 7 agents in Yiling Market.
+When content is flagged, AI agents analyze it immediately. Within seconds, a preliminary signal is available. These agents can use different reasoning strategies — evidence-based, statistical, adversarial — each contributing independent signals.
 
 **Layer 2 — Human Reporters (depth)**
 Human participants can join any open market by bonding tokens and submitting their own assessment. They catch nuances, cultural context, and domain expertise that AI might miss.
@@ -1110,7 +1102,7 @@ Yiling is live on **Monad** — a high-performance EVM-compatible L1 with parall
 
 ## Status
 
-Monad deployment is live. Markets are being onboarded.
+Monad deployment is live. The protocol contracts are deployed and operational.
 
 ## Same Contracts, Native Deployment
 
