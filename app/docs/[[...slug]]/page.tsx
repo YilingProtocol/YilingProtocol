@@ -100,19 +100,19 @@ const docsContent: Record<string, string> = {
 
 ## What is Yiling?
 
-Yiling is an **oracle-free prediction market protocol** — and also a live product. We run our own prediction markets on Monad, and the same infrastructure is open for anyone to build on.
+Yiling is **truth discovery infrastructure** — a protocol that resolves outcomes no oracle can answer. Built on Monad, the same infrastructure is open for anyone to build on.
 
 Based on [peer-reviewed research](https://arxiv.org/abs/2306.04305) from Harvard (published at ACM EC 2025), the protocol implements the SKC mechanism — a mathematically proven system where truth emerges from game theory, not external oracles.
 
 ## Two Ways to Use Yiling
 
-### 1. Trade on Our Markets
-Yiling runs live prediction markets on **Monad**. You can explore markets, submit your predictions, and earn rewards for accuracy — no oracle needed.
+### 1. Explore Yiling Market
+Yiling Market is the first application built on the protocol. Explore live markets, submit predictions, and earn rewards for accuracy — no oracle needed.
 
 → [Explore Markets](https://yilingmarket.vercel.app/)
 
-### 2. Build Your Own
-The same infrastructure powering our markets is available for you to build on. Create your own prediction markets, governance systems, dispute resolution, or anything that needs decentralized truth discovery.
+### 2. Build on the Protocol
+The same infrastructure is available for anyone. Build prediction markets, governance systems, dispute resolution, content verification, or anything that needs decentralized truth discovery.
 
 → [Integration Guide](/docs/build/overview)
 
@@ -235,7 +235,7 @@ Explore active markets and find a question you have insight on. Check the curren
 
 Enter your probability estimate (1%–99%) and confirm the transaction. Your bond is attached automatically.
 
-- **Bond** — a deposit that you put up with your prediction (typically 0.1 ETH)
+- **Bond** — a deposit that you put up with your prediction (set per market, e.g. 0.01 MON)
 - **Your prediction** — your honest probability estimate for the outcome
 
 ### 4. Wait for Resolution
@@ -283,7 +283,7 @@ Your prediction: 75%
 Final truth (qFinal): 80%
 
 → You moved the price toward truth (+25% in the right direction)
-→ Payout: 0.1 ETH bond + 0.186 ETH reward = 0.286 ETH (+186% profit)
+→ Payout: 0.01 MON bond + 0.0186 MON reward = 0.0286 MON (+186% profit)
 \`\`\`
 
 ## Example: Unprofitable Prediction
@@ -294,7 +294,7 @@ Your prediction: 40%
 Final truth (qFinal): 80%
 
 → You moved the price away from truth (-30% wrong direction)
-→ Payout: 0 ETH (bond lost)
+→ Payout: 0 MON (bond lost)
 \`\`\`
 
 ## Last-K Predictors
@@ -473,9 +473,9 @@ Core contracts deployed on Monad.
 |-----------|---------|-------------|
 | Alpha (α) | 20% | Stop probability per prediction |
 | K | 2 | Last k predictors get flat reward |
-| Flat Reward (R) | 0.01 ETH | Reward per last-k predictor |
-| Bond | 0.1 ETH | Deposit per prediction |
-| Liquidity (b) | 1.0 ETH | LMSR scaling parameter |
+| Flat Reward (R) | 0.005 MON | Reward per last-k predictor |
+| Bond | 0.01 MON | Deposit per prediction |
+| Liquidity (b) | 0.1 MON | LMSR scaling parameter |
 | Initial Price | 0.5 | Starting market price |
 
 ## Write Functions
@@ -900,12 +900,12 @@ The random stop triggers. The scoring formula runs. Everyone — AI and human al
 // Create a content verification market
 const tx = await contract.createMarket(
   "Is this content misleading? [content_hash: 0xabc...]",
-  ethers.parseEther("0.5"),   // initial price: 50% (uncertain)
   ethers.parseEther("0.3"),   // alpha: 30% (faster resolution)
   2,                           // k: last 2 reporters get flat reward
   ethers.parseEther("0.01"),  // flat reward
-  ethers.parseEther("0.1"),   // bond per report
-  ethers.parseEther("1"),     // liquidity parameter
+  ethers.parseEther("0.01"),  // bond per report
+  ethers.parseEther("0.1"),   // liquidity parameter
+  ethers.parseEther("0.5"),   // initial price: 50% (uncertain)
   { value: requiredFunding }
 );
 \`\`\`
@@ -1096,7 +1096,7 @@ The paper addresses prediction markets for outcomes that cannot be directly veri
 
   "networks/monad": `# Monad
 
-Yiling is expanding to **Monad** — a high-performance EVM-compatible L1 with parallel execution.
+Yiling is live on **Monad** — a high-performance EVM-compatible L1 with parallel execution.
 
 ## Why Monad
 
@@ -1140,8 +1140,8 @@ Yiling is live on Monad. Here's what's next.
 |------|-------------|--------|
 | TypeScript SDK | Client library with TypeScript types | In development |
 | Python SDK | Client library, agent runner | In development |
-| REST API | HTTP endpoints for market data | Planned |
-| WebSocket | Real-time market event streaming | Planned |
+| REST API | HTTP endpoints for market data | ✅ Live |
+| WebSocket | Real-time market event streaming | ✅ Live |
 | Agent Framework | Multi-strategy AI agent toolkit | In development |
 
 ## Product Features
