@@ -61,7 +61,14 @@ function Navigation({ dark }: { dark?: boolean }) {
     >
       <div className="mx-auto max-w-6xl px-6 flex items-center justify-between h-[72px]">
         <div className="flex items-center gap-3">
-          <Image src="/logo.svg" alt="Yiling Protocol" width={70} height={70} />
+          <svg width="70" height="70" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-all duration-500">
+            <g transform="translate(256,256)">
+              <path d="M-8,-8 C-8,-80 -80,-80 -80,-8 Z" fill={dark ? "#E8DDD3" : "#111111"} className="transition-[fill] duration-500" />
+              <path d="M-8,8 C-8,80 -80,80 -80,8 Z" fill={dark ? "#E8DDD3" : "#111111"} className="transition-[fill] duration-500" />
+              <circle cx="44" cy="-44" r="36" fill="#2563EB" />
+              <path d="M8,8 C8,80 80,80 80,8 Z" fill={dark ? "#E8DDD3" : "#111111"} className="transition-[fill] duration-500" />
+            </g>
+          </svg>
           <span className={`font-heading font-bold text-[16px] tracking-tight transition-colors duration-500 ${dark ? "text-white" : "text-text"}`}>Yiling Protocol</span>
         </div>
 
