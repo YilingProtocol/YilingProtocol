@@ -1,132 +1,103 @@
 # Architecture
 
-Yiling Protocol is designed as a modular stack. Only the smart contracts are required — everything else is optional infrastructure you can use, replace, or skip entirely.
+Yiling Protocol is a four-layer stack. Each layer has a specific responsibility.
 
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         YOUR APPLICATION                         │
-│   (custom UI, bot, dashboard, or any interface you build)       │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-              ┌─────────────┼─────────────┐
-              │             │             │
-              ▼             ▼             ▼
-     ┌──────────────┐ ┌──────────┐ ┌──────────────┐
-     │  REST API    │ │ WebSocket│ │ Direct RPC   │
-     │  (optional)  │ │(optional)│ │ (always works)│
-     └──────┬───────┘ └────┬─────┘ └──────┬───────┘
-            │              │              │
-            └──────────────┼──────────────┘
-                           │
-              ┌────────────▼────────────┐
-              │    SMART CONTRACTS      │
-              │    (Core Protocol)      │
-              │                         │
-              │  PredictionMarket.sol   │
-              │  MarketFactory.sol      │
-              │  FixedPointMath.sol     │
-              └────────────┬────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  ANY CHAIN  │
-                    └─────────────┘
+┌─────────────────────────────────────────────┐
+│              DISCOVERY LAYER                 │
+│  ERC-8004 (any EVM chain)                    │
+│  Identity + Reputation + Validation          │
+└──────────────────────┬──────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────┐
+│              PAYMENT LAYER                   │
+│  x402 (8 chains: EVM + Solana + Stellar)     │
+│  Chain-agnostic payments via HTTP             │
+└──────────────────────┬──────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────┐
+│           COORDINATION LAYER                 │
+│  Protocol API (Hono + x402 middleware)        │
+│  MCP Server (AI agent tools)                  │
+│  A2A Endpoint (external agent tasks)          │
+│  Webhook System (real-time events)            │
+└──────────────────────┬──────────────────────┘
+                       │ onlyProtocolAPI
+┌──────────────────────▼──────────────────────┐
+│             MECHANISM LAYER                  │
+│  Hub Contract (Monad)                         │
+│  SKCEngine + QueryFactory + AgentRegistry     │
+│  + ReputationManager + FixedPointMath         │
+└─────────────────────────────────────────────┘
 ```
 
-## Components
+## Layer Details
 
-### Core Protocol (Required)
+### 1. Discovery Layer — ERC-8004
+
+Agents register their identity on any EVM chain. Three registries:
+
+- **Identity Registry** — ERC-721 NFT with agent metadata (endpoints, wallets, capabilities)
+- **Reputation Registry** — accuracy scores accumulated after each query resolution
+- **Validation Registry** — independent verification of mechanism execution
+
+Reputation is portable — an agent's score in dispute resolution is visible in governance too.
+
+### 2. Payment Layer — x402
+
+HTTP-native payments. Builder or agent sends a request, gets a 402 response with payment options, pays on their preferred chain, retries with payment proof.
+
+Supported chains: Base, Arbitrum, Optimism, Ethereum, Polygon, Avalanche, Solana, Stellar.
+
+No bridging. No cross-chain messaging. The protocol accepts payment on the chain where the user has funds.
+
+### 3. Coordination Layer — Protocol API
+
+The bridge between multi-chain payments and the single-chain Hub contract:
+
+- **REST API** — query create, report, status, claim, resolve
+- **MCP Server** — 9 tools for AI agents to use autonomously
+- **A2A Endpoint** — external agents send tasks via Agent-to-Agent protocol
+- **Webhook System** — real-time push notifications for 7 event types
+- **SDK** — TypeScript client wrapping the API
+
+All core Hub contract functions are gated by `onlyProtocolAPI` — only the Protocol API can call them. This ensures all interactions go through the payment layer.
+
+### 4. Mechanism Layer — Hub Contract
+
+Single Solidity deployment on Monad. Five contracts:
 
 | Contract | Purpose |
 |----------|---------|
-| `PredictionMarket.sol` | Market creation, predictions, SKC resolution, payouts |
-| `MarketFactory.sol` | Convenience wrapper for deploying markets |
-| `FixedPointMath.sol` | On-chain `ln()` with 1e18 fixed-point precision |
+| **SKCEngine** | Core SKC mechanism — reports, random stop, scoring, payouts |
+| **QueryFactory** | Query creation, active query tracking |
+| **AgentRegistry** | ERC-8004 identity verification |
+| **ReputationManager** | Automatic reputation writing after resolution |
+| **FixedPointMath** | WAD math library — ln, cross-entropy, delta scoring |
 
-This is the protocol. Everything else is optional.
+## Fee Model
 
-### Reference Agent System (Optional)
-
-The `agents/` directory contains a full agent orchestration system:
-
-| Component | Purpose |
-|-----------|---------|
-| `standalone_agent.py` | Independent agent — connects directly to chain |
-| `webhook_agent_template.py` | Template for webhook-based agents |
-| `orchestrator.py` | Coordinates multiple agents with random ordering |
-| `base_agent.py` | Base class with multi-LLM support (OpenAI, Anthropic, Gemini) |
-| `api_server.py` | FastAPI REST API for market data |
-| `event_broadcaster.py` | WebSocket server for live events |
-| `agents/profiles.py` | 7 built-in agent personas |
-
-You can use these as-is, modify them, or build your own agent system entirely.
-
-### Reference Frontend (Optional)
-
-The `frontend/` directory contains a Next.js application:
-
-- Wallet connection (wagmi/viem)
-- Market creation form
-- Live agent prediction feed
-- Price chart visualization
-- Agent leaderboard
-
-This is one example of a UI. Build your own to match your use case.
-
-## Integration Patterns
-
-### Pattern 1: Direct Contract Interaction
-The simplest approach. Your application talks directly to the smart contracts via any web3 library.
+Revenue is the spread between x402 inflows and outflows:
 
 ```
-Your App → RPC → Smart Contracts
+IN:  Builder pays bondPool + 15% creation fee
+OUT: Protocol pays agents gross payout - 5% settlement rake
+NET: difference = protocol revenue
 ```
 
-### Pattern 2: With Reference Infrastructure
-Use the provided API server and WebSocket for convenience.
+No on-chain protocol fee. Fee logic lives entirely in the API layer.
 
-```
-Your App → REST API / WebSocket → Smart Contracts
-```
+## Cross-Chain Design
 
-### Pattern 3: Full Stack
-Deploy the entire reference stack — contracts, agents, API, frontend.
+The protocol achieves chain agnosticism without deploying contracts on every chain:
 
-```
-Reference Frontend → API Server → Smart Contracts
-                         ↑
-               Agent Orchestrator → LLM Providers
-```
+| What | Where |
+|------|-------|
+| Smart contracts | Monad only |
+| Agent identity | Any EVM chain (ERC-8004) |
+| Payments | Any x402-supported chain |
+| API server | Any cloud provider |
 
-### Pattern 4: Protocol Integration
-Embed Yiling markets into your existing protocol as a truth-discovery layer.
-
-```
-Your Protocol → createMarket() → agents predict → resolution → your protocol reads result
-```
-
-## Data Flow
-
-```
-1. Market Created (on-chain)
-       │
-2. Agents detect new market (polling or events)
-       │
-3. Agent analyzes question + prediction history
-       │
-4. Agent submits prediction + bond (on-chain tx)
-       │
-5. Contract checks random stop: blockhash % WAD < alpha?
-       │
-   ┌───┴───┐
-   NO      YES
-   │       │
-   │    6. Market resolves
-   │       │
-   │    7. Cross-entropy scoring calculates payouts
-   │       │
-   │    8. Agents claim payouts
-   │
-   Wait for next prediction
-```
+One contract, any chain, one agent pool, one reputation system.

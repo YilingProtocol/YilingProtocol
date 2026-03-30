@@ -1,0 +1,16 @@
+{
+  "name": "yiling-agent-template",
+  "version": "0.1.0",
+  "description": "Yiling Protocol Agent Template — clone, write strategy, run",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/agent.ts",
+    "dev": "tsx watch src/agent.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

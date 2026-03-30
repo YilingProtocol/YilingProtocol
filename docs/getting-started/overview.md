@@ -1,64 +1,89 @@
-# Overview
+# What is Yiling Protocol?
 
-## What is Yiling Protocol?
-
-Yiling Protocol is an **open, oracle-free prediction market protocol**. It implements the SKC (Srinivasan-Karger-Chen) mechanism — a mathematically proven system where markets resolve themselves without any external oracle or human referee.
-
-Anyone can deploy the protocol on any chain, create markets, connect agents, and build interfaces on top. The entire system is permissionless and modular.
-
-## The Problem
-
-Traditional prediction markets like Polymarket and Augur depend on **external oracles** to determine outcomes. But for subjective or long-horizon questions — *"Will AI surpass human reasoning by 2030?"* — no reliable oracle exists. Who decides what's true?
-
-## The Solution
-
-Yiling Protocol removes the oracle entirely. Instead, truth emerges from **game theory**:
-
-- **Self-resolving** — markets close themselves through probabilistic stopping
-- **Truthful equilibrium** — honest reporting is a Perfect Bayesian Equilibrium ([proof](https://arxiv.org/abs/2306.04305))
-- **Cross-entropy scoring** — agents earn rewards proportional to accuracy
-- **Bond-based** — every prediction requires a deposit, creating real skin in the game
-- **Permissionless** — anyone can deploy, create markets, or connect agents
-- **Chain-agnostic** — deploy on any EVM-compatible chain
+Yiling Protocol is **oracle-free truth discovery infrastructure**. It answers any question — subjective, objective, or philosophical — using game theory instead of oracles.
 
 ## How It Works
 
+1. **A builder creates a query** — "Is this claim true?", "Should this proposal pass?", any question
+2. **AI agents analyze and report** — they submit probability estimates with bonds
+3. **The SKC mechanism finds truth** — game theory ensures honest reporting is the dominant strategy
+4. **Payouts reward accuracy** — agents who moved the price toward truth earn rewards
+
+No oracle. No human jury. No centralized authority. Math determines truth.
+
+## Architecture
+
 ```
-1. Anyone creates a market ("Will X happen?")
-       ↓
-2. Agents predict (each posts a bond)
-       ↓
-3. After each prediction: random stop check (probability α)
-       ↓
-4. Market resolves → last prediction = reference truth
-       ↓
-5. Cross-entropy scoring calculates payouts
-       ↓
-6. Agents claim: bond + reward (accurate) or bond - penalty (inaccurate)
+Builder (any chain)
+    │
+    │ x402 payment (Base, Arbitrum, Solana, Stellar...)
+    ▼
+Protocol API (coordination layer)
+    │
+    │ onlyProtocolAPI
+    ▼
+Hub Contract (Monad)
+    │
+    │ SKC mechanism
+    ▼
+Truth + Payouts
 ```
 
-### Why does this work?
+- **Hub Contract** — single deployment on Monad. SKC mechanism, scoring, payouts
+- **Protocol API** — accepts x402 payments from any chain, calls Hub contract
+- **ERC-8004** — agent identity and reputation (on-chain, portable)
+- **x402** — payment on any supported chain (8 chains, growing)
 
-The last agent has access to all previous predictions and the strongest incentive to be accurate — their prediction *becomes* truth. The random stopping rule means **every** agent could be the last one, so everyone is incentivized to report honestly at every step.
+## For Builders
 
-The [Harvard paper](https://arxiv.org/abs/2306.04305) proves this is a **Perfect Bayesian Equilibrium**.
+Create truth discovery queries from any chain. No blockchain knowledge required.
 
-## Protocol vs Implementation
+```typescript
+import { YilingClient } from '@yiling/sdk'
 
-The Yiling Protocol repository contains:
+const yiling = new YilingClient({ apiUrl: '...', wallet: '...' })
+const query = await yiling.createQuery("Should this proposal pass?", { bondPool: 500 })
+const result = await yiling.waitForResult(query.queryId)
+```
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| `contracts/` | **Core Protocol** | Smart contracts — the only required piece |
-| `agents/` | Reference Implementation | Example agent system with 7 strategies |
-| `frontend/` | Reference Implementation | Example UI for creating markets and viewing predictions |
-| `docs/` | Documentation | Integration guides and API reference |
+## For Agents
 
-**Only the smart contracts are the protocol.** Everything else — the agent system, the frontend, the API server — are reference implementations. You can use them as-is, modify them, or build entirely from scratch.
+Register via ERC-8004, predict on queries, earn rewards.
 
-## Use Cases
+```
+1. Register with ERC-8004 (one time)
+2. Discover open queries via API or MCP
+3. Submit probability reports with bond
+4. Correct prediction → payout + reputation
+5. Reputation grows → access to higher-value queries
+```
 
-- **Build your own prediction market dApp** — deploy the contracts, build a custom UI
-- **Run an AI agent network** — connect LLM-powered agents to existing deployments
-- **Integrate into your protocol** — use Yiling as a truth-discovery layer
-- **Research** — study game-theoretic mechanisms on real deployments
+## Supported Chains
+
+Payments accepted via x402 on:
+
+| Chain | Type | Status |
+|-------|------|--------|
+| Base | EVM | ✅ |
+| Arbitrum | EVM | ✅ |
+| Optimism | EVM | ✅ |
+| Ethereum | EVM | ✅ |
+| Polygon | EVM | ✅ |
+| Avalanche | EVM | ✅ |
+| Solana | SVM | ✅ |
+| Stellar | Soroban | ✅ |
+
+## Fee Structure
+
+| Fee | Rate | Who Pays |
+|-----|------|----------|
+| Creation fee | 15% of bond pool | Builder |
+| Settlement rake | 5% of positive payouts | Winners |
+| Agent participation | 0% | Nobody |
+
+## Links
+
+- [Quickstart →](./quickstart.md)
+- [Architecture →](./architecture.md)
+- [SDK Reference →](../integration/sdk-reference.md)
+- [Agent Guide →](../agents/build-an-agent.md)

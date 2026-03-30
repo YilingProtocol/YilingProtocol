@@ -1,0 +1,18 @@
+{
+  "name": "@yiling/sdk",
+  "version": "0.1.0",
+  "description": "Yiling Protocol SDK — truth discovery in 3 lines of code",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@x402/fetch": "^2.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

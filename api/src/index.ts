@@ -1,0 +1,84 @@
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { serve } from "@hono/node-server";
+import { config } from "./config.js";
+import queryRoutes from "./routes/query.js";
+import agentRoutes from "./routes/agent.js";
+import healthRoutes from "./routes/health.js";
+import webhookRoutes from "./routes/webhooks.js";
+import { createA2ARoutes } from "./a2a/handler.js";
+
+const app = new Hono();
+
+// Global middleware
+app.use("*", cors());
+app.use("*", logger());
+
+// Routes
+app.route("/query", queryRoutes);
+app.route("/agent", agentRoutes);
+app.route("/health", healthRoutes);
+app.route("/webhooks", webhookRoutes);
+
+// A2A routes (agent card discovery + task handling)
+const a2aRoutes = createA2ARoutes(`http://localhost:${config.port}`);
+app.route("/", a2aRoutes);
+
+// Active queries list (free)
+app.get("/queries/active", async (c) => {
+  try {
+    const { getQueryCount, getQueryInfo } = await import("./services/contract.js");
+    const totalQueries = await getQueryCount();
+    const activeQueries = [];
+
+    for (let i = 0n; i < totalQueries; i++) {
+      const info = await getQueryInfo(i);
+      if (!info.resolved) {
+        activeQueries.push({
+          queryId: i.toString(),
+          question: info.question,
+          currentPrice: info.currentPrice.toString(),
+          creator: info.creator,
+          totalPool: info.totalPool.toString(),
+          reportCount: info.reportCount.toString(),
+        });
+      }
+    }
+
+    return c.json({ activeQueries });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Root
+app.get("/", (c) => {
+  return c.json({
+    name: "Yiling Protocol API",
+    version: "0.1.0",
+    description: "Oracle-free truth discovery infrastructure",
+    docs: {
+      pricing: "GET /query/pricing",
+    },
+    endpoints: {
+      "POST /query/create": "Create a new truth discovery query (x402: bondPool + 15% fee)",
+      "POST /query/:id/report": "Submit a report (x402: bond amount, 0% agent fee)",
+      "GET /query/:id/status": "Get query status and details (free)",
+      "POST /query/:id/claim": "Claim payout after resolution (5% rake deducted)",
+      "GET /query/:id/payout/:reporter": "Preview payout amounts (free)",
+      "GET /query/pricing": "View current fee structure (free)",
+      "POST /query/:id/resolve": "Force resolve a query",
+      "GET /queries/active": "List all active queries (free)",
+      "GET /agent/:address/status": "Check agent registration status (free)",
+      "GET /agent/:id/reputation": "Get agent reputation score (free)",
+      "GET /health": "Health check (free)",
+    },
+  });
+});
+
+// Start server
+console.log(`Yiling Protocol API starting on port ${config.port}...`);
+serve({ fetch: app.fetch, port: config.port }, (info) => {
+  console.log(`Yiling Protocol API running at http://localhost:${info.port}`);
+});

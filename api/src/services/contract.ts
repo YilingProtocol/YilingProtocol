@@ -1,0 +1,290 @@
+import { createPublicClient, createWalletClient, http, parseAbi, type Address, type Hex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { config } from "../config.js";
+
+// Minimal ABIs for Hub contract interaction
+const skcEngineAbi = parseAbi([
+  // Core functions (API-gated)
+  "function createQuery(string question, uint256 alpha, uint256 k, uint256 flatReward, uint256 bondAmount, uint256 liquidityParam, uint256 initialPrice, uint256 fundingAmount, int128 minReputation, string reputationTag, address creator) external returns (uint256)",
+  "function submitReport(uint256 queryId, uint256 probability, address reporter, uint256 bondAmount, string sourceChain) external",
+  "function recordPayoutClaim(uint256 queryId, address reporter) external",
+  "function forceResolve(uint256 queryId) external",
+
+  // View functions
+  "function getQueryInfo(uint256 queryId) external view returns (string question, uint256 currentPrice, address creator, bool resolved, uint256 totalPool, uint256 reportCount)",
+  "function getQueryParams(uint256 queryId) external view returns (uint256 alpha, uint256 k, uint256 flatReward, uint256 bondAmount, uint256 liquidityParam, uint256 createdAt)",
+  "function getReport(uint256 queryId, uint256 index) external view returns (uint256 agentId, address reporter, uint256 probability, uint256 priceBefore, uint256 priceAfter, uint256 bondAmount, string sourceChain, uint256 timestamp)",
+  "function getReportCount(uint256 queryId) external view returns (uint256)",
+  "function getPayoutAmount(uint256 queryId, address reporter) external view returns (uint256)",
+  "function isQueryActive(uint256 queryId) external view returns (bool)",
+  "function hasReported(uint256 queryId, address reporter) external view returns (bool)",
+  "function hasClaimed(uint256 queryId, address reporter) external view returns (bool)",
+  "function queryCount() external view returns (uint256)",
+
+  // Events
+  "event QueryCreated(uint256 indexed queryId, string question, uint256 alpha, uint256 initialPrice, address indexed creator)",
+  "event ReportSubmitted(uint256 indexed queryId, uint256 indexed agentId, address indexed reporter, uint256 probability, uint256 priceBefore, uint256 reportIndex)",
+  "event QueryResolved(uint256 indexed queryId, uint256 finalPrice, uint256 totalReports)",
+  "event PayoutRecorded(uint256 indexed queryId, address indexed reporter, uint256 amount)",
+]);
+
+const agentRegistryAbi = parseAbi([
+  "function isRegisteredAgent(address wallet) external view returns (bool)",
+  "function getAgentId(address wallet) external view returns (uint256)",
+  "function hasJoined(uint256 agentId) external view returns (bool)",
+  "function totalJoinedAgents() external view returns (uint256)",
+]);
+
+const reputationManagerAbi = parseAbi([
+  "function getAgentReputation(uint256 agentId) external view returns (uint64 count, int128 value, uint8 decimals)",
+  "function getAgentReputationByTag(uint256 agentId, string tag2) external view returns (uint64 count, int128 value, uint8 decimals)",
+  "function isAgentEligible(uint256 agentId, int128 minReputation, string tag2) external view returns (bool)",
+]);
+
+// Define Monad chain (custom since it's not in viem's built-in chains)
+const monadTestnet = {
+  id: 10143,
+  name: "Monad Testnet",
+  nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
+  rpcUrls: { default: { http: [config.rpcUrl] } },
+} as const;
+
+// Clients
+const publicClient = createPublicClient({
+  chain: monadTestnet,
+  transport: http(config.rpcUrl),
+});
+
+const account = config.privateKey
+  ? privateKeyToAccount(config.privateKey as Hex)
+  : undefined;
+
+const walletClient = account
+  ? createWalletClient({
+      account,
+      chain: monadTestnet,
+      transport: http(config.rpcUrl),
+    })
+  : undefined;
+
+// ========== WRITE FUNCTIONS ==========
+
+export async function createQuery(params: {
+  question: string;
+  alpha: bigint;
+  k: bigint;
+  flatReward: bigint;
+  bondAmount: bigint;
+  liquidityParam: bigint;
+  initialPrice: bigint;
+  fundingAmount: bigint;
+  minReputation: bigint;
+  reputationTag: string;
+  creator: Address;
+}) {
+  if (!walletClient) throw new Error("Wallet not configured");
+
+  const hash = await walletClient.writeContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "createQuery",
+    args: [
+      params.question,
+      params.alpha,
+      params.k,
+      params.flatReward,
+      params.bondAmount,
+      params.liquidityParam,
+      params.initialPrice,
+      params.fundingAmount,
+      params.minReputation,
+      params.reputationTag,
+      params.creator,
+    ],
+  });
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  return { hash, receipt };
+}
+
+export async function submitReport(params: {
+  queryId: bigint;
+  probability: bigint;
+  reporter: Address;
+  bondAmount: bigint;
+  sourceChain: string;
+}) {
+  if (!walletClient) throw new Error("Wallet not configured");
+
+  const hash = await walletClient.writeContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "submitReport",
+    args: [
+      params.queryId,
+      params.probability,
+      params.reporter,
+      params.bondAmount,
+      params.sourceChain,
+    ],
+  });
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  return { hash, receipt };
+}
+
+export async function recordPayoutClaim(queryId: bigint, reporter: Address) {
+  if (!walletClient) throw new Error("Wallet not configured");
+
+  const hash = await walletClient.writeContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "recordPayoutClaim",
+    args: [queryId, reporter],
+  });
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  return { hash, receipt };
+}
+
+export async function forceResolve(queryId: bigint) {
+  if (!walletClient) throw new Error("Wallet not configured");
+
+  const hash = await walletClient.writeContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "forceResolve",
+    args: [queryId],
+  });
+
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  return { hash, receipt };
+}
+
+// ========== READ FUNCTIONS ==========
+
+export async function getQueryInfo(queryId: bigint) {
+  const result = await publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "getQueryInfo",
+    args: [queryId],
+  });
+
+  const [question, currentPrice, creator, resolved, totalPool, reportCount] = result;
+  return { question, currentPrice, creator, resolved, totalPool, reportCount };
+}
+
+export async function getQueryParams(queryId: bigint) {
+  const result = await publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "getQueryParams",
+    args: [queryId],
+  });
+
+  const [alpha, k, flatReward, bondAmount, liquidityParam, createdAt] = result;
+  return { alpha, k, flatReward, bondAmount, liquidityParam, createdAt };
+}
+
+export async function getReport(queryId: bigint, index: bigint) {
+  const result = await publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "getReport",
+    args: [queryId, index],
+  });
+
+  const [agentId, reporter, probability, priceBefore, priceAfter, bondAmount, sourceChain, timestamp] = result;
+  return { agentId, reporter, probability, priceBefore, priceAfter, bondAmount, sourceChain, timestamp };
+}
+
+export async function getReportCount(queryId: bigint) {
+  return publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "getReportCount",
+    args: [queryId],
+  });
+}
+
+export async function getPayoutAmount(queryId: bigint, reporter: Address) {
+  return publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "getPayoutAmount",
+    args: [queryId, reporter],
+  });
+}
+
+export async function isQueryActive(queryId: bigint) {
+  return publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "isQueryActive",
+    args: [queryId],
+  });
+}
+
+export async function getQueryCount() {
+  return publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "queryCount",
+  });
+}
+
+export async function hasReported(queryId: bigint, reporter: Address) {
+  return publicClient.readContract({
+    address: config.skcEngineAddress as Address,
+    abi: skcEngineAbi,
+    functionName: "hasReported",
+    args: [queryId, reporter],
+  });
+}
+
+// ========== AGENT FUNCTIONS ==========
+
+export async function isRegisteredAgent(wallet: Address) {
+  return publicClient.readContract({
+    address: config.agentRegistryAddress as Address,
+    abi: agentRegistryAbi,
+    functionName: "isRegisteredAgent",
+    args: [wallet],
+  });
+}
+
+export async function getAgentId(wallet: Address) {
+  return publicClient.readContract({
+    address: config.agentRegistryAddress as Address,
+    abi: agentRegistryAbi,
+    functionName: "getAgentId",
+    args: [wallet],
+  });
+}
+
+// ========== REPUTATION FUNCTIONS ==========
+
+export async function getAgentReputation(agentId: bigint) {
+  const result = await publicClient.readContract({
+    address: config.reputationManagerAddress as Address,
+    abi: reputationManagerAbi,
+    functionName: "getAgentReputation",
+    args: [agentId],
+  });
+
+  const [count, value, decimals] = result;
+  return { count, value, decimals };
+}
+
+export async function getAgentReputationByTag(agentId: bigint, tag: string) {
+  const result = await publicClient.readContract({
+    address: config.reputationManagerAddress as Address,
+    abi: reputationManagerAbi,
+    functionName: "getAgentReputationByTag",
+    args: [agentId, tag],
+  });
+
+  const [count, value, decimals] = result;
+  return { count, value, decimals };
+}
