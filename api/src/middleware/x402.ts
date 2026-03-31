@@ -34,17 +34,22 @@ const monadFacilitator = new HTTPFacilitatorClient({
   url: "https://x402-facilitator.molandak.org",
 });
 
-// x402 Resource Server — Monad + Base Sepolia + Solana Devnet (TESTNET)
+// x402 Resource Server — Base Sepolia + Solana Devnet (Coinbase facilitator)
+// Note: Monad uses a separate facilitator, added via overrides
 export const x402Server = new x402ResourceServer(coinbaseFacilitator)
-  .register("eip155:84532", new ExactEvmScheme())     // Base Sepolia (Coinbase facilitator)
-  .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme())  // Solana devnet
-  .register("eip155:10143", new ExactEvmScheme());    // Monad testnet (Monad facilitator)
+  .register("eip155:84532", new ExactEvmScheme())     // Base Sepolia
+  .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());  // Solana devnet
+
+// TODO: Monad x402 support requires separate facilitator (molandak.org)
+// x402ResourceServer only accepts one facilitator at construction.
+// Monad payment acceptance will be added when multi-facilitator support is available
+// or via a separate x402 server instance for Monad routes.
 
 // Supported inbound payment networks (TESTNET)
 export const allNetworks: `${string}:${string}`[] = [
-  "eip155:10143",      // Monad testnet
   "eip155:84532",      // Base Sepolia
   "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",  // Solana devnet
+  // "eip155:10143" — Monad testnet (separate facilitator, coming soon)
 ];
 
 /**
