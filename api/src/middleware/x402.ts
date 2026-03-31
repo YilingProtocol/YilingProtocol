@@ -30,9 +30,19 @@ export const coinbaseX402Server = new x402ResourceServer(coinbaseFacilitator)
   .register("eip155:84532", new ExactEvmScheme())     // Base Sepolia
   .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());  // Solana devnet
 
-// Server 2: Monad
-export const monadX402Server = new x402ResourceServer(monadFacilitator)
-  .register("eip155:10143", new ExactEvmScheme());    // Monad testnet
+// Server 2: Monad (lazy initialized to prevent startup crash)
+let _monadX402Server: x402ResourceServer | null = null;
+export function getMonadX402Server() {
+  if (!_monadX402Server) {
+    try {
+      _monadX402Server = new x402ResourceServer(monadFacilitator)
+        .register("eip155:10143", new ExactEvmScheme());
+    } catch {
+      console.log("Monad x402 server initialization failed");
+    }
+  }
+  return _monadX402Server;
+}
 
 // All supported networks (TESTNET)
 const coinbaseNetworks: `${string}:${string}`[] = [
