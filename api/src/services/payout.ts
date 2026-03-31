@@ -43,7 +43,7 @@ const TREASURY_CHAINS: Record<string, ChainTreasury> = {
     chainName: "Arbitrum Sepolia",
   },
   "eip155:11155111": {
-    rpcUrl: "https://rpc.sepolia.org",
+    rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
     usdcAddress: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" as Address, // Ethereum Sepolia USDC
     chainName: "Ethereum Sepolia",
   },
@@ -84,12 +84,19 @@ export async function executePayout(
     transport: http(chainConfig.rpcUrl),
   });
 
+  // Convert from WAD (18 decimals) to USDC (6 decimals)
+  const usdcAmount = amount / 1_000_000_000_000n; // 18 - 6 = 12 zeros
+
+  if (usdcAmount === 0n) {
+    throw new Error("Payout amount too small to convert to USDC");
+  }
+
   // Execute ERC-20 transfer from treasury to agent
   const txHash = await walletClient.writeContract({
     address: chainConfig.usdcAddress,
     abi: ERC20_ABI,
     functionName: "transfer",
-    args: [recipientAddress, amount],
+    args: [recipientAddress, usdcAmount],
     chain: undefined,
   });
 

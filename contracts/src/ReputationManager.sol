@@ -123,7 +123,8 @@ contract ReputationManager {
         int128 minReputation,
         string calldata tag2
     ) external view returns (bool eligible) {
-        address[] memory clients = new address[](0);
+        address[] memory clients = new address[](1);
+        clients[0] = address(this);
         (uint64 count, int128 value,) = reputationRegistry.getSummary(
             agentId,
             clients,

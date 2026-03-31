@@ -30,28 +30,15 @@ const coinbaseFacilitator = new HTTPFacilitatorClient({
   url: "https://x402.org/facilitator",
 });
 
-// x402 Resource Server — EVM + SVM only (shipping SDKs)
+// x402 Resource Server — only networks supported by Coinbase facilitator (testnet)
 export const x402Server = new x402ResourceServer(coinbaseFacilitator)
-  // EVM chains — testnet
   .register("eip155:84532", new ExactEvmScheme())     // Base Sepolia
-  .register("eip155:421614", new ExactEvmScheme())    // Arbitrum Sepolia
-  .register("eip155:11155420", new ExactEvmScheme())  // Optimism Sepolia
-  .register("eip155:11155111", new ExactEvmScheme())  // Ethereum Sepolia
-  .register("eip155:80002", new ExactEvmScheme())     // Polygon Amoy
-  .register("eip155:43113", new ExactEvmScheme())     // Avalanche Fuji
-  // SVM chains — testnet
   .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());  // Solana devnet
 
 // Supported inbound payment networks (TESTNET)
+// Only networks that the Coinbase facilitator actually supports
 export const allNetworks: `${string}:${string}`[] = [
-  // EVM (Coinbase facilitator)
   "eip155:84532",      // Base Sepolia
-  "eip155:421614",     // Arbitrum Sepolia
-  "eip155:11155420",   // Optimism Sepolia
-  "eip155:11155111",   // Ethereum Sepolia
-  "eip155:80002",      // Polygon Amoy
-  "eip155:43113",      // Avalanche Fuji
-  // SVM (Coinbase facilitator)
   "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",  // Solana devnet
 ];
 

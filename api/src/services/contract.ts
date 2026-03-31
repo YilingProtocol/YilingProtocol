@@ -101,9 +101,13 @@ export async function createQuery(params: {
       params.reputationTag,
       params.creator,
     ],
+    gas: 1_000_000n,
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status === "reverted") {
+    throw new Error("Transaction reverted on-chain");
+  }
   return { hash, receipt };
 }
 
@@ -127,9 +131,13 @@ export async function submitReport(params: {
       params.bondAmount,
       params.sourceChain,
     ],
+    gas: 1_000_000n, // manual gas limit — Monad gas estimation can be unreliable
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status === "reverted") {
+    throw new Error("Transaction reverted on-chain");
+  }
   return { hash, receipt };
 }
 
@@ -141,9 +149,13 @@ export async function recordPayoutClaim(queryId: bigint, reporter: Address) {
     abi: skcEngineAbi,
     functionName: "recordPayoutClaim",
     args: [queryId, reporter],
+    gas: 500_000n,
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status === "reverted") {
+    throw new Error("Transaction reverted on-chain");
+  }
   return { hash, receipt };
 }
 
@@ -155,9 +167,13 @@ export async function forceResolve(queryId: bigint) {
     abi: skcEngineAbi,
     functionName: "forceResolve",
     args: [queryId],
+    gas: 1_000_000n,
   });
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  if (receipt.status === "reverted") {
+    throw new Error("Transaction reverted on-chain");
+  }
   return { hash, receipt };
 }
 
