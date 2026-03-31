@@ -98,9 +98,62 @@ function Navigation({ dark }: { dark?: boolean }) {
   );
 }
 
+// ─── On-Chain Stats ────────────────────────────────────────────────────────
+
+const MONAD_RPC = "https://testnet-rpc.monad.xyz";
+const AGENT_REGISTRY = "0x546B81976098C8955f9c145C9492aDF1f428f1f9";
+const SKC_ENGINE = "0xf7619B77AE051d6a56c626555c50C7e8DAdCfCd0";
+
+function useOnChainStats() {
+  const [agents, setAgents] = useState<string>("—");
+  const [queries, setQueries] = useState<string>("—");
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        // totalJoinedAgents() selector: 0x5c975abb → actually need to compute
+        // Using raw eth_call with function selector
+        const agentRes = await fetch(MONAD_RPC, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0", id: 1, method: "eth_call",
+            params: [{ to: AGENT_REGISTRY, data: "0x32d57004" }, "latest"] // totalJoinedAgents()
+          }),
+        });
+        const agentData = await agentRes.json();
+        if (agentData.result) {
+          setAgents(String(parseInt(agentData.result, 16)));
+        }
+
+        const queryRes = await fetch(MONAD_RPC, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0", id: 2, method: "eth_call",
+            params: [{ to: SKC_ENGINE, data: "0x9b2aded4" }, "latest"] // queryCount()
+          }),
+        });
+        const queryData = await queryRes.json();
+        if (queryData.result) {
+          setQueries(String(parseInt(queryData.result, 16)));
+        }
+      } catch {
+        // silently fail, keep defaults
+      }
+    }
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000); // refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
+
+  return { agents, queries };
+}
+
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 function Hero() {
+  const { agents, queries } = useOnChainStats();
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center pt-36 pb-16">
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
@@ -178,9 +231,9 @@ function Hero() {
 
           <motion.div variants={fadeUp} className="flex items-center justify-center gap-12 pt-10">
             {[
-              { value: "0", label: "Oracles Needed" },
+              { value: agents, label: "Agents Onboarded" },
+              { value: queries, label: "Queries Created" },
               { value: "7+", label: "Chains Supported" },
-              { value: "1", label: "Contract Needed" },
             ].map((stat, i) => (
               <div key={stat.label} className="text-center">
                 <span className="font-heading font-bold text-2xl sm:text-3xl tracking-tight text-text">{stat.value}</span>
