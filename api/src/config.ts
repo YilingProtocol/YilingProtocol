@@ -14,6 +14,7 @@ export const config = {
   // x402 (inbound payments only — pull protocol, cannot push payouts)
   facilitatorUrl: process.env.X402_FACILITATOR_URL || "https://x402.org/facilitator",
   facilitatorFallbackUrl: process.env.X402_FACILITATOR_FALLBACK_URL || "https://api.cdp.coinbase.com/platform/v2/x402",
+  monadFacilitatorUrl: process.env.MONAD_FACILITATOR_URL || "https://x402-facilitator.molandak.org",
   treasuryAddress: process.env.TREASURY_ADDRESS || "",
 
   // Environment
@@ -27,6 +28,7 @@ export const config = {
   acceptedPayments: process.env.NETWORK_ENV === "mainnet"
     ? [
         // Mainnet
+        { network: "eip155:10143", asset: "USDC" },     // Monad
         { network: "eip155:8453", asset: "USDC" },      // Base
         { network: "eip155:42161", asset: "USDC" },     // Arbitrum
         { network: "eip155:10", asset: "USDC" },        // Optimism
@@ -37,6 +39,7 @@ export const config = {
       ]
     : [
         // Testnet (default)
+        { network: "eip155:10143", asset: "USDC" },     // Monad testnet
         { network: "eip155:84532", asset: "USDC" },     // Base Sepolia
         { network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", asset: "USDC" },  // Solana devnet
       ],

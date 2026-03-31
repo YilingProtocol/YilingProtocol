@@ -31,6 +31,12 @@ interface ChainTreasury {
 }
 
 const TREASURY_CHAINS: Record<string, ChainTreasury> = {
+  // Monad testnet (primary — same chain as Hub contract)
+  "eip155:10143": {
+    rpcUrl: "https://testnet-rpc.monad.xyz",
+    usdcAddress: "0x534b2f3A21130d7a60830c2Df862319e593943A3" as Address, // Monad testnet USDC
+    chainName: "Monad Testnet",
+  },
   // EVM testnets
   "eip155:84532": {
     rpcUrl: "https://sepolia.base.org",
