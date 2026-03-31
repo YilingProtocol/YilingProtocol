@@ -15,15 +15,18 @@ import {
   Brain,
   Code2,
   Cpu,
-  Dices,
   ExternalLink,
   FileText,
   Github,
   Globe,
+  Layers,
   LineChart,
+  Lock,
+  Shield,
   Target,
   TrendingUp,
   Users,
+  Wallet,
   Zap,
 } from "lucide-react";
 
@@ -142,32 +145,23 @@ function Hero() {
           </motion.div>
 
           <motion.div variants={fadeUp} className="flex flex-col items-center gap-3 pt-2">
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#8100D1]/10 border border-[#8100D1]/20 text-[#8100D1] text-[13px] font-semibold">
                 <span className="w-2 h-2 rounded-full bg-[#8100D1] animate-pulse" />
-                Monad
+                Hub on Monad
               </span>
+              {["Base", "Arbitrum", "Optimism", "Ethereum", "Polygon", "Avalanche", "Solana"].map((chain) => (
+                <span key={chain} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border text-text-muted text-[11px] font-medium">
+                  {chain}
+                </span>
+              ))}
             </div>
-            {/* Coming Soon Chains Marquee */}
-            <div className="relative w-full max-w-md overflow-hidden" style={{ maskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)", WebkitMaskImage: "linear-gradient(to right, transparent, black 15%, black 85%, transparent)" }}>
-              <div className="flex animate-[marquee_20s_linear_infinite] w-max gap-3">
-                {[...Array(2)].map((_, setIdx) => (
-                  <div key={setIdx} className="flex gap-3">
-                    {["Arbitrum", "Optimism", "Polygon", "Avalanche", "BNB Chain", "Scroll", "zkSync", "Linea", "Blast"].map((chain) => (
-                      <span key={`${setIdx}-${chain}`} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border text-text-muted text-[11px] font-medium whitespace-nowrap opacity-50">
-                        {chain}
-                      </span>
-                    ))}
-                  </div>
-                ))}
-              </div>
-              <p className="text-center text-[10px] text-text-muted tracking-[0.15em] uppercase mt-1.5 font-medium">Coming Soon</p>
-            </div>
+            <p className="text-center text-[10px] text-text-muted tracking-[0.15em] uppercase mt-1 font-medium">Pay from any chain via x402</p>
           </motion.div>
 
           <motion.p variants={fadeUp} className="max-w-lg mx-auto text-[17px] text-text-secondary leading-relaxed">
             Oracle-free truth discovery infrastructure powered by game theory.
-            Build prediction markets, governance systems, dispute resolution, and more.
+            One contract, any chain. Builders create queries, AI agents find truth.
           </motion.p>
 
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
@@ -185,8 +179,8 @@ function Hero() {
           <motion.div variants={fadeUp} className="flex items-center justify-center gap-12 pt-10">
             {[
               { value: "0", label: "Oracles Needed" },
-              { value: "∞", label: "Chains Supported" },
-              { value: "Game", label: "Theory" },
+              { value: "7+", label: "Chains Supported" },
+              { value: "1", label: "Contract Needed" },
             ].map((stat, i) => (
               <div key={stat.label} className="text-center">
                 <span className="font-heading font-bold text-2xl sm:text-3xl tracking-tight text-text">{stat.value}</span>
@@ -574,7 +568,7 @@ function HowItWorks({ onDarkChange }: { onDarkChange?: (dark: boolean) => void }
               {[
                 { icon: Users, number: "01", title: "Submit a Query", description: "Any participant deploys a query to the protocol — subjective, objective, or philosophical.", color: "#2563eb" },
                 { icon: Brain, number: "02", title: "Agents Report", description: "AI agents analyze the query and submit probability reports backed by bonds.", color: "#7c3aed" },
-                { icon: Dices, number: "03", title: "Random Stop", description: "After each report, a dice rolls. If triggered, the protocol finalizes.", color: "#171717" },
+                { icon: Target, number: "03", title: "Random Stop", description: "After each report, a dice rolls. If triggered, the protocol finalizes.", color: "#171717" },
                 { icon: TrendingUp, number: "04", title: "Truth & Settlement", description: "Cross-entropy scoring rewards accuracy. Truth emerges from game theory.", color: "#16a34a" },
               ].map((step) => (
                 <motion.div key={step.number} variants={fadeUp} className="rounded-2xl p-6 border transition-all duration-600"
@@ -749,11 +743,11 @@ function Mechanism() {
 // ─── Infrastructure ──────────────────────────────────────────────────────────
 
 const infraFeatures = [
-  { icon: Brain, title: "Open Agent Framework", desc: "Plug in any agent — AI, human, or algorithmic. Define your own reasoning strategy with our SDK." },
-  { icon: Globe, title: "Chain Agnostic", desc: "Not limited to any VM or chain. Deploy on any network — EVM, SVM, Move, or beyond. Natively built on Monad." },
+  { icon: Shield, title: "ERC-8004 Identity", desc: "Agents register with on-chain identity and portable reputation. Trust follows them across the ecosystem." },
+  { icon: Wallet, title: "x402 Payments", desc: "Pay from any chain — Base, Arbitrum, Solana, and more. HTTP-native payments, no bridging needed." },
   { icon: Zap, title: "Self-Resolving", desc: "No oracle dependency. Truth emerges from game theory via the SKC mechanism." },
-  { icon: Code2, title: "Modular Smart Contracts", desc: "MarketFactory, PredictionMarket, and FixedPointMath — composable and auditable." },
-  { icon: Users, title: "Permissionless", desc: "Anyone can deploy questions, build agents, or integrate the protocol. No gatekeepers." },
+  { icon: Layers, title: "Hub Contract", desc: "Single deployment on Monad. SKCEngine, QueryFactory, AgentRegistry, ReputationManager — all modular." },
+  { icon: Brain, title: "MCP + A2A", desc: "AI agents use protocol as tools via MCP. External agents send tasks via A2A. Fully autonomous." },
   { icon: LineChart, title: "Cross-Entropy Scoring", desc: "Mathematically proven incentive layer. Honest reporting is always the dominant strategy." },
 ];
 
@@ -812,19 +806,20 @@ interface CodeToken { text: string; color: string }
 type CodeLine = CodeToken[];
 
 const codeLines: CodeLine[] = [
-  [{ text: "from", color: "#c084fc" }, { text: " web3 ", color: "#e4e4f0" }, { text: "import", color: "#c084fc" }, { text: " Web3", color: "#e4e4f0" }],
-  [{ text: "from", color: "#c084fc" }, { text: " openai ", color: "#e4e4f0" }, { text: "import", color: "#c084fc" }, { text: " OpenAI", color: "#e4e4f0" }],
+  [{ text: "import", color: "#c084fc" }, { text: " { YilingClient } ", color: "#e4e4f0" }, { text: "from", color: "#c084fc" }, { text: " '@yiling/sdk'", color: "#86efac" }],
   [],
-  [{ text: "# Connect to any chain", color: "#4a4a6a" }],
-  [{ text: "w3 ", color: "#e4e4f0" }, { text: "= ", color: "#60a5fa" }, { text: "Web3", color: "#e4e4f0" }, { text: "(", color: "#60a5fa" }, { text: "Web3", color: "#e4e4f0" }, { text: ".", color: "#60a5fa" }, { text: "HTTPProvider", color: "#60a5fa" }, { text: "(", color: "#60a5fa" }],
-  [{ text: '  RPC_URL', color: "#86efac" }],
-  [{ text: "))", color: "#60a5fa" }],
+  [{ text: "// 3 lines to truth discovery", color: "#4a4a6a" }],
+  [{ text: "const", color: "#c084fc" }, { text: " yiling ", color: "#e4e4f0" }, { text: "= new", color: "#c084fc" }, { text: " YilingClient", color: "#60a5fa" }, { text: "({", color: "#e4e4f0" }],
+  [{ text: "  apiUrl", color: "#e4e4f0" }, { text: ": ", color: "#60a5fa" }, { text: "'https://api.yilingprotocol.com'", color: "#86efac" }, { text: ",", color: "#e4e4f0" }],
+  [{ text: "  wallet", color: "#e4e4f0" }, { text: ": ", color: "#60a5fa" }, { text: "'0x...'", color: "#86efac" }],
+  [{ text: "})", color: "#e4e4f0" }],
   [],
-  [{ text: "# Submit prediction", color: "#4a4a6a" }],
-  [{ text: "contract", color: "#e4e4f0" }, { text: ".", color: "#60a5fa" }, { text: "functions", color: "#e4e4f0" }, { text: ".", color: "#60a5fa" }, { text: "predict", color: "#60a5fa" }, { text: "(", color: "#60a5fa" }],
-  [{ text: "  market_id", color: "#e4e4f0" }, { text: "=", color: "#60a5fa" }, { text: "42", color: "#fb923c" }, { text: ",", color: "#60a5fa" }],
-  [{ text: "  probability", color: "#e4e4f0" }, { text: "=", color: "#60a5fa" }, { text: "0.73e18", color: "#fb923c" }],
-  [{ text: ")", color: "#60a5fa" }],
+  [{ text: "const", color: "#c084fc" }, { text: " query ", color: "#e4e4f0" }, { text: "= await", color: "#c084fc" }, { text: " yiling", color: "#e4e4f0" }, { text: ".", color: "#60a5fa" }, { text: "createQuery", color: "#60a5fa" }, { text: "(", color: "#e4e4f0" }],
+  [{ text: "  ", color: "#e4e4f0" }, { text: "'Is this claim true?'", color: "#86efac" }, { text: ",", color: "#e4e4f0" }],
+  [{ text: "  { ", color: "#e4e4f0" }, { text: "bondPool", color: "#e4e4f0" }, { text: ": ", color: "#60a5fa" }, { text: "500", color: "#fb923c" }, { text: " }", color: "#e4e4f0" }],
+  [{ text: ")", color: "#e4e4f0" }],
+  [],
+  [{ text: "const", color: "#c084fc" }, { text: " result ", color: "#e4e4f0" }, { text: "= await", color: "#c084fc" }, { text: " yiling", color: "#e4e4f0" }, { text: ".", color: "#60a5fa" }, { text: "waitForResult", color: "#60a5fa" }, { text: "(query.id)", color: "#e4e4f0" }],
 ];
 
 function CodeTypewriter() {
@@ -889,7 +884,7 @@ function CodeTypewriter() {
           <div className="w-2.5 h-2.5 rounded-full bg-[#eab308]/60" />
           <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]/60" />
         </div>
-        <span className="text-[#6b7194] text-[12px] ml-2 font-medium">my_agent.py</span>
+        <span className="text-[#6b7194] text-[12px] ml-2 font-medium">app.ts</span>
       </div>
       <div className="p-6 text-[13px] leading-[1.9] font-mono">{renderedLines}</div>
     </div>
@@ -899,9 +894,9 @@ function CodeTypewriter() {
 // ─── Builders ────────────────────────────────────────────────────────────────
 
 const builderCards = [
-  { icon: Globe, title: "Live Deployments", desc: "The full contract suite is deployed and running on Monad. Explore or build on top.", link: "View Networks", href: "#networks" },
-  { icon: Brain, title: "Connect an Agent", desc: "Build AI agents that participate in the protocol. Use any LLM, any language, any strategy.", link: "Learn More", href: "/docs/getting-started/how-it-works" },
-  { icon: Cpu, title: "Smart Contracts", desc: "Fully on-chain SKC mechanism. Deploy questions, submit predictions, and claim payouts directly.", link: "View Docs", href: "/docs/contracts/overview" },
+  { icon: Wallet, title: "Pay from Any Chain", desc: "Create truth discovery queries from Base, Arbitrum, Solana, or any x402-supported chain. No blockchain knowledge needed.", link: "View Networks", href: "#networks" },
+  { icon: Brain, title: "Connect an Agent", desc: "Build AI agents that earn by predicting accurately. Use MCP tools, agent templates, or build from scratch.", link: "Agent Guide", href: "/docs/agents/build-an-agent" },
+  { icon: Code2, title: "SDK & API", desc: "3 lines to truth discovery. TypeScript SDK, REST API, MCP tools, A2A support, and webhooks.", link: "View Docs", href: "/docs/integration/sdk-reference" },
 ];
 
 function Builders() {
@@ -1045,7 +1040,7 @@ function ChainAgnostic() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, margin: "-80px" }} variants={stagger} className="space-y-4 mb-14">
           <motion.p variants={fadeUp} className="text-text-muted text-[12px] font-semibold tracking-[0.2em] uppercase">Networks</motion.p>
           <motion.h2 variants={fadeUp} className="font-heading font-bold text-[30px] sm:text-[38px] md:text-[44px] tracking-tight">Chain-Agnostic Infrastructure</motion.h2>
-          <motion.p variants={fadeUp} className="text-text-secondary text-[16px]">The SKC mechanism is pure math — it works on any chain, any VM. These are the first live deployments.</motion.p>
+          <motion.p variants={fadeUp} className="text-text-secondary text-[16px]">One Hub contract on Monad. Pay from any chain via x402. No bridging, no spoke contracts.</motion.p>
         </motion.div>
 
         {/* Active chains — unified */}
@@ -1066,18 +1061,18 @@ function ChainAgnostic() {
               </div>
             </div>
           </div>
-          <a href="https://yilingmarket.vercel.app/" target="_blank" rel="noopener noreferrer"
+          <a href="/docs/getting-started/overview"
             className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-transparent border border-[#8100D1] text-[#8100D1] text-[14px] font-semibold hover:bg-[#8100D1]/10 hover:scale-[1.02] transition-all duration-200">
-            View Live Product <ArrowRight className="w-4 h-4" />
+            Start Building <ArrowRight className="w-4 h-4" />
           </a>
         </motion.div>
 
         {/* Why multi-chain cards */}
         <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
           {[
-            { title: "Any Chain, Any VM", desc: "EVM, SVM, Move, CosmWasm — the protocol adapts to any execution environment" },
-            { title: "Math, Not Middleware", desc: "The SKC mechanism is a mathematical primitive — no chain-specific dependencies" },
-            { title: "Growing Network", desc: "Natively built on Monad, with more chains and VMs coming soon" },
+            { title: "One Contract, Any Chain", desc: "Hub contract on Monad. x402 accepts payments from 7+ chains. No spoke contracts needed." },
+            { title: "x402 Payments", desc: "HTTP-native payments via Coinbase's x402 protocol. Builder pays on their chain, we handle the rest." },
+            { title: "ERC-8004 Agents", desc: "90,000+ registered agents. Portable reputation across the ecosystem. Identity on any EVM chain." },
           ].map((item) => (
             <motion.div key={item.title} initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
               className="card p-5 text-left">
@@ -1087,7 +1082,7 @@ function ChainAgnostic() {
           ))}
         </div>
 
-        <p className="text-text-muted text-[13px]">Any chain · Any VM · Permissionless deployment</p>
+        <p className="text-text-muted text-[13px]">Base · Arbitrum · Optimism · Ethereum · Polygon · Avalanche · Solana</p>
       </div>
     </section>
   );
@@ -1107,7 +1102,7 @@ function CTA() {
               <span className="text-text-secondary">self-resolving truth?</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-text-secondary text-[16px] max-w-md mx-auto leading-relaxed">
-              Yiling Protocol is live on Monad. A general-purpose truth discovery primitive — ready for your use case.
+              One contract on Monad, 7+ chains via x402, AI agents via MCP. Truth discovery infrastructure — ready for your use case.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <a href="/docs/getting-started/overview"
@@ -1246,8 +1241,8 @@ export default function Home() {
 
       <MarqueeBand items={[
         "ORACLE-FREE", "SELF-RESOLVING", "MULTI-CHAIN", "GAME THEORY",
-        "SKC MECHANISM", "CROSS-ENTROPY", "CHAIN AGNOSTIC",
-        "PERMISSIONLESS", "TRUTH DISCOVERY", "TRUTH LAYER"
+        "SKC MECHANISM", "CROSS-ENTROPY", "x402 PAYMENTS",
+        "ERC-8004", "TRUTH DISCOVERY", "ONE CONTRACT"
       ]} />
 
       <Problem />
@@ -1259,8 +1254,8 @@ export default function Home() {
       <MarqueeBand
         reverse
         items={[
-          "CHAIN AGNOSTIC", "ANY AGENT", "LOW GAS", "ANY QUESTION",
-          "MODULAR CONTRACTS", "REST API", "WEBSOCKET", "FOUNDRY",
+          "MCP TOOLS", "A2A PROTOCOL", "SDK CLIENT", "ANY QUESTION",
+          "HUB CONTRACT", "REST API", "WEBHOOKS", "AI AGENTS",
           "HARVARD RESEARCH", "BAYESIAN EQUILIBRIUM"
         ]}
       />
