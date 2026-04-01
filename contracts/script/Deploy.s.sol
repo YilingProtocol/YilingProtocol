@@ -12,37 +12,42 @@ contract DeployScript is Script {
     address constant ERC8004_IDENTITY = 0x8004A818BFB912233c491871b3d84c89A494BD9e;
     address constant ERC8004_REPUTATION = 0x8004B663056A597Dffe9eCcC1965A193B7388713;
 
+    // Role addresses — each role has its own wallet
+    address constant PROTOCOL_API = 0x68C749cE3B87D1C41164a92DdED086331e0B78a1;
+    address constant TREASURY     = 0x0C952bA7Ce073b05c62F49a0a52304057997B351;
+
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
 
-        console.log("Deployer:", deployer);
-        console.log("Chain: Monad");
+        console.log("Deployer (Owner):", deployer);
+        console.log("ProtocolAPI:", PROTOCOL_API);
+        console.log("Treasury:", TREASURY);
         console.log("ERC-8004 Identity:", ERC8004_IDENTITY);
         console.log("ERC-8004 Reputation:", ERC8004_REPUTATION);
 
         vm.startBroadcast(deployerKey);
 
-        // 1. Deploy AgentRegistry (uses real ERC-8004 Identity)
+        // 1. Deploy AgentRegistry
         AgentRegistry agentRegistry = new AgentRegistry(ERC8004_IDENTITY);
         console.log("AgentRegistry:", address(agentRegistry));
 
-        // 2. Deploy ReputationManager (uses real ERC-8004 Reputation)
+        // 2. Deploy ReputationManager
         ReputationManager reputationManager = new ReputationManager(ERC8004_REPUTATION);
         console.log("ReputationManager:", address(reputationManager));
 
-        // 3. Deploy SKCEngine
+        // 3. Deploy SKCEngine — protocolAPI is separate from owner
         SKCEngine skcEngine = new SKCEngine(
             address(agentRegistry),
             address(reputationManager),
-            deployer // protocolAPI = deployer (update later when API is deployed)
+            PROTOCOL_API
         );
         console.log("SKCEngine:", address(skcEngine));
 
-        // 4. Deploy QueryFactory
+        // 4. Deploy QueryFactory — protocolAPI is separate from owner
         QueryFactory queryFactory = new QueryFactory(
             address(skcEngine),
-            deployer // protocolAPI = deployer (update later)
+            PROTOCOL_API
         );
         console.log("QueryFactory:", address(queryFactory));
 
@@ -55,6 +60,9 @@ contract DeployScript is Script {
         // Print summary
         console.log("");
         console.log("=== DEPLOYMENT SUMMARY ===");
+        console.log("OWNER=", deployer);
+        console.log("PROTOCOL_API=", PROTOCOL_API);
+        console.log("TREASURY=", TREASURY);
         console.log("SKC_ENGINE_ADDRESS=", address(skcEngine));
         console.log("QUERY_FACTORY_ADDRESS=", address(queryFactory));
         console.log("AGENT_REGISTRY_ADDRESS=", address(agentRegistry));

@@ -101,8 +101,8 @@ function Navigation({ dark }: { dark?: boolean }) {
 // ─── On-Chain Stats ────────────────────────────────────────────────────────
 
 const MONAD_RPC = "https://testnet-rpc.monad.xyz";
-const AGENT_REGISTRY = "0x546B81976098C8955f9c145C9492aDF1f428f1f9";
-const SKC_ENGINE = "0xf7619B77AE051d6a56c626555c50C7e8DAdCfCd0";
+const AGENT_REGISTRY = "0x913495BdD2cbBC5ec660934cE3a9Cc268839c2e4";
+const SKC_ENGINE = "0x8eAb524A6F7e91Fb055279CAf4d3E95a7C9A94B2";
 
 function useOnChainStats() {
   const [agents, setAgents] = useState<string>("—");
