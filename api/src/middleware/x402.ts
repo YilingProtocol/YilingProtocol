@@ -89,13 +89,19 @@ export function buildAccepts(price: string, payTo: string) {
  *   - Payment from Base/Solana → verify with Coinbase facilitator
  */
 export function createMultiFacilitatorMiddleware(payTo: string) {
-  // Create individual middlewares
-  const monadConfig: Record<string, any> = {};
+  // Monad config lists ALL networks — so 402 shows everything
+  // Even though Monad facilitator only verifies Monad,
+  // the 402 response needs to show all options to the client
+  const allNetworksConfig: Record<string, any> = {};
   const coinbaseConfig: Record<string, any> = {};
 
   for (const [route, cfg] of Object.entries(paidRoutes)) {
-    monadConfig[route] = {
-      accepts: [{ scheme: "exact" as const, price: cfg.price, network: MONAD_NETWORK, payTo }],
+    allNetworksConfig[route] = {
+      accepts: [
+        { scheme: "exact" as const, price: cfg.price, network: MONAD_NETWORK, payTo },
+        { scheme: "exact" as const, price: cfg.price, network: "eip155:84532" as const, payTo },
+        { scheme: "exact" as const, price: cfg.price, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const, payTo },
+      ],
       description: cfg.description,
       mimeType: "application/json",
     };
@@ -109,7 +115,8 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
     };
   }
 
-  const monadMiddleware = paymentMiddleware(monadConfig, monadServer);
+  // Monad server handles 402 response (shows all networks) + verifies Monad payments
+  const monadMiddleware = paymentMiddleware(allNetworksConfig, monadServer);
   const coinbaseMiddleware = paymentMiddleware(coinbaseConfig, coinbaseServer);
 
   return async (c: Context, next: Next) => {
@@ -123,8 +130,7 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
 
     const paymentHeader = c.req.header("X-PAYMENT") || c.req.header("x-payment");
 
-    // No payment → let Monad middleware return 402
-    // (SDK formats the 402 response with correct headers)
+    // No payment → Monad middleware returns 402 with ALL networks listed
     if (!paymentHeader) {
       return monadMiddleware(c, next);
     }
@@ -140,7 +146,6 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
         return coinbaseMiddleware(c, next);
       }
     } catch {
-      // Can't parse → try Monad as default
       return monadMiddleware(c, next);
     }
   };
