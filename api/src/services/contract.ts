@@ -29,6 +29,7 @@ const skcEngineAbi = parseAbi([
 ]);
 
 const agentRegistryAbi = parseAbi([
+  "function joinEcosystem(uint256 agentId) external",
   "function isRegisteredAgent(address wallet) external view returns (bool)",
   "function getAgentId(address wallet) external view returns (uint256)",
   "function hasJoined(uint256 agentId) external view returns (bool)",
@@ -278,6 +279,23 @@ export async function getAgentId(wallet: Address) {
     abi: agentRegistryAbi,
     functionName: "getAgentId",
     args: [wallet],
+  });
+}
+
+export async function hasJoined(agentId: bigint) {
+  return publicClient.readContract({
+    address: config.agentRegistryAddress as Address,
+    abi: agentRegistryAbi,
+    functionName: "hasJoined",
+    args: [agentId],
+  });
+}
+
+export async function totalJoinedAgents() {
+  return publicClient.readContract({
+    address: config.agentRegistryAddress as Address,
+    abi: agentRegistryAbi,
+    functionName: "totalJoinedAgents",
   });
 }
 

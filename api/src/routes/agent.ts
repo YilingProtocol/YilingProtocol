@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import * as contract from "../services/contract.js";
+import { config } from "../config.js";
 import type { Address } from "viem";
 
 const agent = new Hono();
@@ -21,6 +22,91 @@ agent.get("/:address/status", async (c) => {
       address,
       isRegistered,
       agentId: agentId.toString(),
+    });
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+/**
+ * POST /agent/register
+ * Register an agent in the Yiling Protocol ecosystem.
+ *
+ * Two-step process:
+ *   Step 1: Mint an ERC-8004 Identity (if you don't have one)
+ *   Step 2: Call joinEcosystem on the AgentRegistry contract
+ *
+ * Both steps require the agent to submit transactions from their own wallet
+ * (msg.sender must be the agent owner). This endpoint returns the exact
+ * calldata and contract addresses needed.
+ */
+agent.post("/register", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { wallet, agentId } = body;
+
+    if (!wallet) return c.json({ error: "wallet address is required" }, 400);
+
+    // Check if already registered
+    const isRegistered = await contract.isRegisteredAgent(wallet as Address);
+    if (isRegistered) {
+      const existingId = await contract.getAgentId(wallet as Address);
+      return c.json({
+        status: "already_registered",
+        wallet,
+        agentId: existingId.toString(),
+        message: "This wallet is already registered in the Yiling Protocol ecosystem.",
+      });
+    }
+
+    // If agentId provided, check if it has already joined
+    if (agentId) {
+      const hasJoined = await contract.hasJoined(BigInt(agentId));
+      if (hasJoined) {
+        return c.json({
+          status: "agent_already_joined",
+          agentId,
+          message: "This agentId has already joined the ecosystem. Use the wallet associated with it.",
+        });
+      }
+    }
+
+    const ERC8004_IDENTITY = "0x80041DCE3EA779433a39e4b0e024c29e04510523";
+
+    return c.json({
+      status: "registration_required",
+      wallet,
+      steps: [
+        {
+          step: 1,
+          name: "Get ERC-8004 Identity",
+          description: "Mint an ERC-8004 agent identity token (if you don't have one).",
+          contract: ERC8004_IDENTITY,
+          chain: "Monad Testnet (chainId: 10143)",
+          rpc: "https://testnet-rpc.monad.xyz",
+          action: agentId
+            ? "You already have agentId " + agentId + ". Skip to step 2."
+            : "Visit https://erc8004.org or call the mint function on the identity contract.",
+        },
+        {
+          step: 2,
+          name: "Join Yiling Ecosystem",
+          description: "Call joinEcosystem(agentId) on the AgentRegistry contract from your agent wallet.",
+          contract: config.agentRegistryAddress,
+          chain: "Monad Testnet (chainId: 10143)",
+          rpc: "https://testnet-rpc.monad.xyz",
+          function: "joinEcosystem(uint256 agentId)",
+          abi: ["function joinEcosystem(uint256 agentId) external"],
+          note: "Must be called from the wallet that owns the ERC-8004 identity or the agent's designated wallet.",
+        },
+        {
+          step: 3,
+          name: "Verify Registration",
+          description: "Confirm your registration by calling this API.",
+          endpoint: "GET /agent/" + wallet + "/status",
+          expect: "{ isRegistered: true }",
+        },
+      ],
     });
   } catch (err: any) {
     return c.json({ error: err.message }, 500);

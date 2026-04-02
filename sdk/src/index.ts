@@ -201,6 +201,17 @@ export class YilingClient {
   }
 
   /**
+   * Get registration instructions for a new agent.
+   * Returns step-by-step guide: ERC-8004 mint → joinEcosystem → verify.
+   */
+  async getRegistrationSteps(agentId?: string): Promise<Record<string, any>> {
+    return this.post("/agent/register", {
+      wallet: this.wallet,
+      agentId,
+    });
+  }
+
+  /**
    * Get agent reputation
    */
   async getReputation(agentId: string, tag?: string): Promise<AgentReputation> {

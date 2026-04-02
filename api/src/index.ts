@@ -123,6 +123,7 @@ app.get("/", (c) => {
       "GET /query/pricing": "View current fee structure (free)",
       "POST /query/:id/resolve": "Force resolve a query",
       "GET /queries/active": "List all active queries (free)",
+      "POST /agent/register": "Get registration instructions for new agents (free)",
       "GET /agent/:address/status": "Check agent registration status (free)",
       "GET /agent/:id/reputation": "Get agent reputation score (free)",
       "GET /events/stream": "Real-time SSE event stream for agents (free)",

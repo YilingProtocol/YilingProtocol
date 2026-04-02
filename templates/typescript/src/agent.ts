@@ -2,16 +2,22 @@
  * Yiling Protocol Agent Runner
  *
  * Automatically:
- *   1. Connects to SSE stream for real-time query notifications
- *   2. Falls back to polling if SSE disconnects
- *   3. Runs your strategy to generate predictions
- *   4. Submits reports via the Protocol API
+ *   1. Checks agent registration (ERC-8004)
+ *   2. Connects to SSE stream for real-time query notifications
+ *   3. Falls back to polling if SSE disconnects
+ *   4. Runs your strategy to generate predictions
+ *   5. Submits reports via the Protocol API (with x402 payment)
+ *   6. Claims payouts after resolution
  *
  * You only need to modify strategy.ts — this file handles everything else.
  */
 
 import { predict } from "./strategy.js";
 import { config } from "./config.js";
+import { wrapFetch } from "@x402/fetch";
+
+// x402-enabled fetch — automatically handles 402 Payment Required responses
+const x402Fetch = wrapFetch(fetch, config.privateKey);
 
 interface Query {
   queryId: string;
@@ -33,7 +39,7 @@ interface Report {
 
 async function getActiveQueries(): Promise<Query[]> {
   const res = await fetch(`${config.apiUrl}/queries/active`);
-  const data = await res.json();
+  const data: any = await res.json();
   return data.activeQueries;
 }
 
@@ -51,7 +57,8 @@ function hasAlreadyReported(reports: Report[]): boolean {
 async function submitReport(queryId: string, probability: number): Promise<any> {
   const probWad = BigInt(Math.floor(probability * 1e18)).toString();
 
-  const res = await fetch(`${config.apiUrl}/query/${queryId}/report`, {
+  // Uses x402Fetch — automatically pays bond via x402 if 402 is returned
+  const res = await x402Fetch(`${config.apiUrl}/query/${queryId}/report`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -64,6 +71,57 @@ async function submitReport(queryId: string, probability: number): Promise<any> 
   return res.json();
 }
 
+async function checkAndClaimPayouts(reportedQueries: string[]) {
+  for (const queryId of reportedQueries) {
+    try {
+      const status = await getQueryStatus(queryId);
+      if (!status.resolved) continue;
+
+      // Check payout
+      const payoutRes = await fetch(
+        `${config.apiUrl}/query/${queryId}/payout/${config.walletAddress}`
+      );
+      if (!payoutRes.ok) continue;
+
+      const payoutInfo: any = await payoutRes.json();
+      if (BigInt(payoutInfo.net || "0") <= 0n) continue;
+
+      // Claim (free endpoint — no x402)
+      const claimRes = await fetch(`${config.apiUrl}/query/${queryId}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reporter: config.walletAddress,
+          payoutChain: config.sourceChain,
+        }),
+      });
+
+      if (claimRes.ok) {
+        const result: any = await claimRes.json();
+        console.log(`  Claimed payout for query #${queryId}: net ${result.payout?.net}`);
+      }
+    } catch (err: any) {
+      console.log(`  Payout check failed for query #${queryId}: ${err.message}`);
+    }
+  }
+}
+
+async function checkRegistration(): Promise<boolean> {
+  const res = await fetch(`${config.apiUrl}/agent/${config.walletAddress}/status`);
+  const status: any = await res.json();
+
+  if (!status.isRegistered) {
+    console.log("WARNING: This wallet is NOT registered in Yiling Protocol.");
+    console.log("  You need an ERC-8004 Identity and must call joinEcosystem().");
+    console.log(`  Run: POST ${config.apiUrl}/agent/register with your wallet to get instructions.`);
+    console.log();
+    return false;
+  }
+
+  console.log(`  Registered as agent #${status.agentId}`);
+  return true;
+}
+
 function parseReports(reports: Report[]) {
   return reports.map((r) => ({
     probability: Number(r.probability) / 1e18,
@@ -73,6 +131,8 @@ function parseReports(reports: Report[]) {
 }
 
 // ─── Process a single query ─────────────────────────────────
+
+const reportedQueries: string[] = [];
 
 async function processQuery(queryId: string) {
   const status = await getQueryStatus(queryId);
@@ -92,6 +152,8 @@ async function processQuery(queryId: string) {
 
   const result = await submitReport(queryId, probability);
   console.log(`    Submitted! tx: ${result.txHash || result.error}`);
+
+  reportedQueries.push(queryId);
 }
 
 // ─── SSE Stream ─────────────────────────────────────────────
@@ -143,6 +205,11 @@ async function pollOnce() {
   for (const q of queries) {
     await processQuery(q.queryId);
   }
+
+  // Check for claimable payouts
+  if (reportedQueries.length > 0) {
+    await checkAndClaimPayouts(reportedQueries);
+  }
 }
 
 // ─── Main Loop ──────────────────────────────────────────────
@@ -157,6 +224,12 @@ async function run() {
   console.log(`  API: ${config.apiUrl}`);
   console.log(`  Chain: ${config.sourceChain}`);
   console.log();
+
+  // Check registration before starting
+  if (!(await checkRegistration())) {
+    console.log("Agent is not registered. Register first, then restart.");
+    return;
+  }
 
   // Try SSE first
   let sse = connectSSE();
