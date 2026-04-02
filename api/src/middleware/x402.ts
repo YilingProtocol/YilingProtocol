@@ -89,19 +89,13 @@ export function buildAccepts(price: string, payTo: string) {
  *   - Payment from Base/Solana → verify with Coinbase facilitator
  */
 export function createMultiFacilitatorMiddleware(payTo: string) {
-  // Monad config lists ALL networks — so 402 shows everything
-  // Even though Monad facilitator only verifies Monad,
-  // the 402 response needs to show all options to the client
-  const allNetworksConfig: Record<string, any> = {};
+  // Each facilitator only knows its own networks
+  const monadConfig: Record<string, any> = {};
   const coinbaseConfig: Record<string, any> = {};
 
   for (const [route, cfg] of Object.entries(paidRoutes)) {
-    allNetworksConfig[route] = {
-      accepts: [
-        { scheme: "exact" as const, price: cfg.price, network: MONAD_NETWORK, payTo },
-        { scheme: "exact" as const, price: cfg.price, network: "eip155:84532" as const, payTo },
-        { scheme: "exact" as const, price: cfg.price, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const, payTo },
-      ],
+    monadConfig[route] = {
+      accepts: [{ scheme: "exact" as const, price: cfg.price, network: MONAD_NETWORK, payTo }],
       description: cfg.description,
       mimeType: "application/json",
     };
@@ -115,8 +109,7 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
     };
   }
 
-  // Monad server handles 402 response (shows all networks) + verifies Monad payments
-  const monadMiddleware = paymentMiddleware(allNetworksConfig, monadServer);
+  const monadMiddleware = paymentMiddleware(monadConfig, monadServer);
   const coinbaseMiddleware = paymentMiddleware(coinbaseConfig, coinbaseServer);
 
   return async (c: Context, next: Next) => {
@@ -130,12 +123,49 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
 
     const paymentHeader = c.req.header("X-PAYMENT") || c.req.header("x-payment");
 
-    // No payment → Monad middleware returns 402 with ALL networks listed
+    // No payment → build our own 402 with ALL networks
     if (!paymentHeader) {
-      return monadMiddleware(c, next);
+      const cfg = paidRoutes[route];
+
+      // Get Monad middleware's 402 response to extract proper headers/format
+      const monadRes = await monadMiddleware(c, async () => {});
+
+      // If monadMiddleware returned a response, extract its headers
+      // and add Base/Solana to the accepts list
+      if (monadRes && monadRes.status === 402) {
+        const body = await monadRes.text();
+
+        // Try to parse and enrich with all networks
+        try {
+          const parsed = JSON.parse(body);
+          if (parsed.accepts) {
+            // Add Coinbase networks
+            parsed.accepts.push(
+              { scheme: "exact", price: cfg.price, network: "eip155:84532", payTo },
+              { scheme: "exact", price: cfg.price, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", payTo },
+            );
+          }
+          // Copy headers from original 402
+          const headers: Record<string, string> = {};
+          monadRes.headers.forEach((value: string, key: string) => {
+            if (key.toLowerCase() !== "content-length") {
+              headers[key] = value;
+            }
+          });
+          return new Response(JSON.stringify(parsed), {
+            status: 402,
+            headers: { ...headers, "content-type": "application/json" },
+          });
+        } catch {
+          // Can't parse — return as-is
+          return monadRes;
+        }
+      }
+
+      return monadRes;
     }
 
-    // Has payment → route to correct facilitator based on network
+    // Has payment → route to correct facilitator
     try {
       const paymentData = JSON.parse(paymentHeader);
       const network = paymentData?.network || paymentData?.payload?.network || "";
