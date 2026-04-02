@@ -25,9 +25,11 @@ export const allNetworks: `${string}:${string}`[] = [
 ];
 
 // ─── Route Config ───────────────────────────────────────────
+// TODO: Re-enable x402 payments after facilitator auth is fixed
+// Temporarily disabled for testnet testing
 const paidRoutes: Record<string, { price: string; description: string }> = {
-  "/query/create": { price: "$10.00", description: "Create a truth discovery query" },
-  "/query/:id/report": { price: "$1.00", description: "Submit a report with bond" },
+  // "/query/create": { price: "$10.00", description: "Create a truth discovery query" },
+  // "/query/:id/report": { price: "$1.00", description: "Submit a report with bond" },
 };
 
 function matchRoute(path: string): string | null {
