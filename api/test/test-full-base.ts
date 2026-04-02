@@ -29,7 +29,7 @@ async function main() {
   const { pay: builderPay } = createPayClient("0x75796d8d70e01350e9114f68c754b9ec184c99a86b3079eaa41a03477da1f484" as `0x${string}`);
   const res1 = await builderPay(`${API}/query/create`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-PREFERRED-CHAIN": "base" },
     body: JSON.stringify({
       question: "Will Ethereum L2s capture more value than L1 by 2028?",
       bondPool: "1000000000000000000",
@@ -60,7 +60,7 @@ async function main() {
     try {
       const res = await pay(`${API}/query/${queryId}/report`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-PREFERRED-CHAIN": "base" },
         body: JSON.stringify({
           probability: agent.prob,
           reporter: address,

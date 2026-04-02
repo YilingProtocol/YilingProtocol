@@ -123,53 +123,19 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
 
     const paymentHeader = c.req.header("X-PAYMENT") || c.req.header("x-payment");
 
-    // No payment → get Monad middleware's 402, then inject Base/Solana networks
+    // No payment → route to correct middleware based on request hint
+    // Client can specify preferred chain in X-PREFERRED-CHAIN header
+    // Default: Monad
     if (!paymentHeader) {
-      // Call monad middleware with a fake next that does nothing
-      let monad402: Response | undefined;
-      const fakeNext = async () => { /* no-op */ };
+      const preferredChain = c.req.header("X-PREFERRED-CHAIN") || "";
 
-      // Clone the context to avoid conflicts
-      const monadResult = await monadMiddleware(c, fakeNext);
-
-      if (monadResult && monadResult.status === 402) {
-        // Extract PAYMENT-REQUIRED header (base64 encoded JSON)
-        const paymentRequiredHeader = monadResult.headers.get("PAYMENT-REQUIRED");
-
-        if (paymentRequiredHeader) {
-          try {
-            // Decode base64 → JSON
-            const decoded = JSON.parse(Buffer.from(paymentRequiredHeader, "base64").toString("utf-8"));
-
-            // Add Base and Solana to accepts
-            if (decoded.accepts && Array.isArray(decoded.accepts)) {
-              const cfg = paidRoutes[route];
-              const monadAccept = decoded.accepts[0]; // use as template
-
-              decoded.accepts.push(
-                { ...monadAccept, network: "eip155:84532" },
-                { ...monadAccept, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" },
-              );
-            }
-
-            // Re-encode to base64
-            const enrichedHeader = Buffer.from(JSON.stringify(decoded)).toString("base64");
-
-            // Return new 402 with enriched header
-            const headers = new Headers(monadResult.headers);
-            headers.set("PAYMENT-REQUIRED", enrichedHeader);
-
-            return new Response(monadResult.body, {
-              status: 402,
-              headers,
-            });
-          } catch {
-            return monadResult;
-          }
-        }
+      if (preferredChain.includes("84532") || preferredChain.toLowerCase().includes("base")) {
+        return coinbaseMiddleware(c, next);
+      } else if (preferredChain.includes("solana")) {
+        return coinbaseMiddleware(c, next);
+      } else {
+        return monadMiddleware(c, next);
       }
-
-      return monadResult || monadMiddleware(c, next);
     }
 
     // Has payment → route to correct facilitator
