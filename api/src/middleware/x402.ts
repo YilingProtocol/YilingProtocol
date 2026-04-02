@@ -123,46 +123,25 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
 
     const paymentHeader = c.req.header("X-PAYMENT") || c.req.header("x-payment");
 
-    // No payment → build our own 402 with ALL networks
+    // No payment → return 402 with ALL networks
     if (!paymentHeader) {
       const cfg = paidRoutes[route];
+      const accepts = allNetworks.map((network) => ({
+        scheme: "exact",
+        network,
+        maxAmountRequired: cfg.price,
+        resource: c.req.url,
+        payTo,
+      }));
 
-      // Get Monad middleware's 402 response to extract proper headers/format
-      const monadRes = await monadMiddleware(c, async () => {});
-
-      // If monadMiddleware returned a response, extract its headers
-      // and add Base/Solana to the accepts list
-      if (monadRes && monadRes.status === 402) {
-        const body = await monadRes.text();
-
-        // Try to parse and enrich with all networks
-        try {
-          const parsed = JSON.parse(body);
-          if (parsed.accepts) {
-            // Add Coinbase networks
-            parsed.accepts.push(
-              { scheme: "exact", price: cfg.price, network: "eip155:84532", payTo },
-              { scheme: "exact", price: cfg.price, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", payTo },
-            );
-          }
-          // Copy headers from original 402
-          const headers: Record<string, string> = {};
-          monadRes.headers.forEach((value: string, key: string) => {
-            if (key.toLowerCase() !== "content-length") {
-              headers[key] = value;
-            }
-          });
-          return new Response(JSON.stringify(parsed), {
-            status: 402,
-            headers: { ...headers, "content-type": "application/json" },
-          });
-        } catch {
-          // Can't parse — return as-is
-          return monadRes;
-        }
-      }
-
-      return monadRes;
+      return c.json(
+        {
+          x402Version: 2,
+          accepts,
+          error: "X-PAYMENT header is required",
+        },
+        { status: 402 }
+      );
     }
 
     // Has payment → route to correct facilitator
