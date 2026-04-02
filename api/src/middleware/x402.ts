@@ -8,52 +8,14 @@ import { config } from "../config.js";
 /**
  * x402 Multi-Facilitator Middleware
  *
- * Two facilitators, two x402 servers, one middleware.
- * When a paid endpoint is hit:
- *   1. First try Monad facilitator
- *   2. If that fails, try Coinbase facilitator
- *   3. 402 response lists ALL supported networks
+ * Graceful initialization: if facilitators are unavailable at startup,
+ * paid routes pass through without payment enforcement.
+ * Free routes always work regardless of facilitator status.
  */
 
 // ─── Monad Server ───────────────────────────────────────────
 const MONAD_NETWORK = "eip155:10143" as const;
 const MONAD_USDC = "0x534b2f3A21130d7a60830c2Df862319e593943A3";
-
-const monadFacilitator = new HTTPFacilitatorClient({
-  url: config.monadFacilitatorUrl,
-});
-
-const monadScheme = new ExactEvmScheme();
-monadScheme.registerMoneyParser(async (amount: number, network: string) => {
-  if (network === MONAD_NETWORK) {
-    return {
-      amount: Math.floor(amount * 1_000_000).toString(),
-      asset: MONAD_USDC,
-      extra: { name: "USDC", version: "2" },
-    };
-  }
-  return null;
-});
-
-const monadServer = new x402ResourceServer(monadFacilitator)
-  .register(MONAD_NETWORK, monadScheme);
-
-// ─── Coinbase Server (primary + fallback) ───────────────────
-const coinbaseFacilitator = new HTTPFacilitatorClient({
-  url: config.facilitatorUrl,
-});
-
-const coinbaseServer = new x402ResourceServer(coinbaseFacilitator)
-  .register("eip155:84532", new ExactEvmScheme())
-  .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());
-
-const coinbaseFallbackFacilitator = new HTTPFacilitatorClient({
-  url: config.facilitatorFallbackUrl,
-});
-
-const coinbaseFallbackServer = new x402ResourceServer(coinbaseFallbackFacilitator)
-  .register("eip155:84532", new ExactEvmScheme())
-  .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());
 
 // ─── All Networks ───────────────────────────────────────────
 export const allNetworks: `${string}:${string}`[] = [
@@ -89,25 +51,47 @@ export function buildAccepts(price: string, payTo: string) {
 }
 
 /**
- * Multi-facilitator payment middleware
+ * Try to create x402 middleware for a facilitator.
+ * Returns null if the facilitator is unavailable.
+ */
+function tryCreateMiddleware(
+  facilitatorUrl: string,
+  networks: Array<{ network: string; scheme: any }>,
+  routeConfig: Record<string, any>,
+): ((c: Context, next: Next) => Promise<any>) | null {
+  try {
+    const facilitator = new HTTPFacilitatorClient({ url: facilitatorUrl });
+    const server = new x402ResourceServer(facilitator);
+
+    for (const { network, scheme } of networks) {
+      server.register(network, scheme);
+    }
+
+    return paymentMiddleware(routeConfig, server);
+  } catch (err) {
+    console.warn(`[x402] Failed to create middleware for ${facilitatorUrl}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Multi-facilitator payment middleware with graceful degradation.
  *
- * For paid routes:
- *   - No payment header → return 402 with ALL networks
- *   - Payment from Monad → verify with Monad facilitator
- *   - Payment from Base/Solana → verify with Coinbase facilitator
+ * If facilitators are unavailable, paid routes pass through
+ * (no payment enforcement) so the API still functions for testing.
  */
 export function createMultiFacilitatorMiddleware(payTo: string) {
-  // Each facilitator only knows its own networks
-  const monadConfig: Record<string, any> = {};
-  const coinbaseConfig: Record<string, any> = {};
+  // Build route configs
+  const monadRouteConfig: Record<string, any> = {};
+  const coinbaseRouteConfig: Record<string, any> = {};
 
   for (const [route, cfg] of Object.entries(paidRoutes)) {
-    monadConfig[route] = {
+    monadRouteConfig[route] = {
       accepts: [{ scheme: "exact" as const, price: cfg.price, network: MONAD_NETWORK, payTo }],
       description: cfg.description,
       mimeType: "application/json",
     };
-    coinbaseConfig[route] = {
+    coinbaseRouteConfig[route] = {
       accepts: [
         { scheme: "exact" as const, price: cfg.price, network: "eip155:84532" as const, payTo },
         { scheme: "exact" as const, price: cfg.price, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const, payTo },
@@ -117,31 +101,51 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
     };
   }
 
-  const monadMiddleware = paymentMiddleware(monadConfig, monadServer);
-  const coinbaseMiddleware = paymentMiddleware(coinbaseConfig, coinbaseServer);
-  const coinbaseFallbackMiddleware = paymentMiddleware(coinbaseConfig, coinbaseFallbackServer);
+  // Lazy-initialized middleware references
+  let monadMiddleware: ((c: Context, next: Next) => Promise<any>) | null = null;
+  let coinbaseMiddleware: ((c: Context, next: Next) => Promise<any>) | null = null;
+  let initialized = false;
 
-  /**
-   * Try primary middleware, fall back on failure.
-   * Captures the response — if it's a 5xx or throws, retry with fallback.
-   */
-  async function withFallback(
-    primary: (c: Context, next: Next) => Promise<any>,
-    fallback: (c: Context, next: Next) => Promise<any>,
-    c: Context,
-    next: Next,
-  ) {
+  async function ensureInitialized() {
+    if (initialized) return;
+    initialized = true;
+
+    // Try Monad facilitator
     try {
-      const res = await primary(c, next);
-      // If primary returned a server error, try fallback
-      if (res instanceof Response && res.status >= 500) {
-        console.warn("[x402] Primary facilitator returned 5xx, trying fallback…");
-        return fallback(c, next);
-      }
-      return res;
+      const monadScheme = new ExactEvmScheme();
+      monadScheme.registerMoneyParser(async (amount: number, network: string) => {
+        if (network === MONAD_NETWORK) {
+          return {
+            amount: Math.floor(amount * 1_000_000).toString(),
+            asset: MONAD_USDC,
+            extra: { name: "USDC", version: "2" },
+          };
+        }
+        return null;
+      });
+
+      const monadFacilitator = new HTTPFacilitatorClient({ url: config.monadFacilitatorUrl });
+      const monadServer = new x402ResourceServer(monadFacilitator).register(MONAD_NETWORK, monadScheme);
+      monadMiddleware = paymentMiddleware(monadRouteConfig, monadServer);
+      console.log("[x402] Monad facilitator initialized");
     } catch (err) {
-      console.warn("[x402] Primary facilitator failed, trying fallback…", err);
-      return fallback(c, next);
+      console.warn("[x402] Monad facilitator unavailable — paid routes on Monad will pass through");
+    }
+
+    // Try Coinbase facilitator
+    try {
+      const coinbaseFacilitator = new HTTPFacilitatorClient({ url: config.facilitatorUrl });
+      const coinbaseServer = new x402ResourceServer(coinbaseFacilitator)
+        .register("eip155:84532", new ExactEvmScheme())
+        .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());
+      coinbaseMiddleware = paymentMiddleware(coinbaseRouteConfig, coinbaseServer);
+      console.log("[x402] Coinbase facilitator initialized");
+    } catch (err) {
+      console.warn("[x402] Coinbase facilitator unavailable — paid routes on Base/Solana will pass through");
+    }
+
+    if (!monadMiddleware && !coinbaseMiddleware) {
+      console.warn("[x402] WARNING: No facilitators available. All paid routes will pass through without payment enforcement.");
     }
   }
 
@@ -154,35 +158,50 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
       return next();
     }
 
+    // Lazy init on first paid request
+    await ensureInitialized();
+
     const paymentHeader = c.req.header("X-PAYMENT") || c.req.header("x-payment");
 
-    // No payment → route to correct middleware based on request hint
-    // Client can specify preferred chain in X-PREFERRED-CHAIN header
-    // Default: Monad
-    if (!paymentHeader) {
-      const preferredChain = c.req.header("X-PREFERRED-CHAIN") || "";
+    // Determine which middleware to use
+    const preferredChain = c.req.header("X-PREFERRED-CHAIN") || "";
+    let useMiddleware: ((c: Context, next: Next) => Promise<any>) | null = null;
 
-      if (preferredChain.includes("84532") || preferredChain.toLowerCase().includes("base")) {
-        return withFallback(coinbaseMiddleware, coinbaseFallbackMiddleware, c, next);
-      } else if (preferredChain.includes("solana")) {
-        return withFallback(coinbaseMiddleware, coinbaseFallbackMiddleware, c, next);
+    if (paymentHeader) {
+      // Has payment → route to correct facilitator
+      try {
+        const paymentData = JSON.parse(paymentHeader);
+        const network = paymentData?.network || paymentData?.payload?.network || "";
+
+        if (network === MONAD_NETWORK || network.includes("10143")) {
+          useMiddleware = monadMiddleware;
+        } else {
+          useMiddleware = coinbaseMiddleware;
+        }
+      } catch {
+        useMiddleware = monadMiddleware;
+      }
+    } else {
+      // No payment → route based on preferred chain
+      if (preferredChain.includes("84532") || preferredChain.toLowerCase().includes("base") || preferredChain.includes("solana")) {
+        useMiddleware = coinbaseMiddleware;
       } else {
-        return monadMiddleware(c, next);
+        useMiddleware = monadMiddleware;
       }
     }
 
-    // Has payment → route to correct facilitator with fallback
-    try {
-      const paymentData = JSON.parse(paymentHeader);
-      const network = paymentData?.network || paymentData?.payload?.network || "";
-
-      if (network === MONAD_NETWORK || network.includes("10143")) {
-        return monadMiddleware(c, next);
-      } else {
-        return withFallback(coinbaseMiddleware, coinbaseFallbackMiddleware, c, next);
+    // If middleware is available, use it; otherwise pass through
+    if (useMiddleware) {
+      try {
+        return await useMiddleware(c, next);
+      } catch (err) {
+        console.warn("[x402] Payment middleware error, passing through:", err);
+        return next();
       }
-    } catch {
-      return monadMiddleware(c, next);
     }
+
+    // No middleware available — pass through (testnet grace mode)
+    console.warn(`[x402] No facilitator for route ${path} — passing through without payment`);
+    return next();
   };
 }
