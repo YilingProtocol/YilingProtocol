@@ -14,17 +14,14 @@ type PaymentEnv = {
 /**
  * x402 Multi-Facilitator Middleware
  *
- * Two facilitators:
- *   - Monad facilitator: handles eip155:10143 (Monad testnet)
- *   - Coinbase facilitator: handles eip155:84532 (Base Sepolia) + Solana devnet
- *
- * Lazy initialization with graceful fallback.
+ * Dynamic pricing: reads request body to determine actual cost.
+ * - /query/create: bondPool + 15% fee (from body)
+ * - /query/:id/report: bondAmount (from on-chain query params)
  */
 
 const MONAD_NETWORK = "eip155:10143" as const;
 const MONAD_USDC = "0x534b2f3A21130d7a60830c2Df862319e593943A3";
 
-// Correct URLs (Coinbase requires www prefix)
 const MONAD_FACILITATOR_URL = config.monadFacilitatorUrl || "https://x402-facilitator.molandak.org";
 const COINBASE_FACILITATOR_URL = "https://www.x402.org/facilitator";
 
@@ -34,20 +31,45 @@ export const allNetworks: `${string}:${string}`[] = [
   "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
 ];
 
-// ─── Paid Routes ────────────────────────────────────────────
-// x402 handles payment authorization — actual amounts depend on query parameters
-// These are base prices; the real cost is bondPool+15% (create) or bondAmount (report)
-// For now, use a reasonable default that covers most cases
-const paidRoutes: Record<string, { price: string; description: string }> = {
-  "/query/create": { price: "$1.00", description: "Create a truth discovery query" },
-  "/query/:id/report": { price: "$1.00", description: "Submit a report with bond" },
-};
+// ─── Dynamic Price Functions ──────────────────────────────
+
+/** Calculate x402 price for query creation from request body */
+function createQueryPrice(context: any): string {
+  try {
+    const body = context.adapter.getBody?.();
+    if (body?.bondPool) {
+      // bondPool is WAD (18 decimals), convert to USDC dollars
+      const bondPoolUsdc = Number(BigInt(body.bondPool)) / 1e18;
+      const withFee = bondPoolUsdc * 1.15; // +15% creation fee
+      const price = Math.max(0.01, withFee); // minimum $0.01
+      return `$${price.toFixed(6)}`;
+    }
+  } catch {}
+  return "$1.00"; // fallback
+}
+
+/** Calculate x402 price for report submission from query's bondAmount */
+async function reportPrice(context: any): Promise<string> {
+  try {
+    // Extract queryId from path: /query/:id/report
+    const path = context.adapter.getPath?.() || "";
+    const match = path.match(/\/query\/(\d+)\/report/);
+    if (match) {
+      const queryId = match[1];
+      // Read bondAmount from on-chain
+      const { getQueryParams } = await import("../services/contract.js");
+      const params = await getQueryParams(BigInt(queryId));
+      const bondUsdc = Number(params.bondAmount) / 1e18;
+      const price = Math.max(0.01, bondUsdc);
+      return `$${price.toFixed(6)}`;
+    }
+  } catch {}
+  return "$1.00"; // fallback
+}
 
 function matchRoute(path: string): string | null {
-  for (const pattern of Object.keys(paidRoutes)) {
-    const regex = new RegExp("^" + pattern.replace(/:id/g, "[^/]+") + "$");
-    if (regex.test(path)) return pattern;
-  }
+  if (path === "/query/create") return "/query/create";
+  if (/^\/query\/[^/]+\/report$/.test(path)) return "/query/:id/report";
   return null;
 }
 
@@ -67,25 +89,48 @@ let initialized = false;
 let initPromise: Promise<void> | null = null;
 
 async function initializeMiddleware(payTo: string) {
-  // Build route configs
-  const monadRouteConfig: Record<string, any> = {};
-  const coinbaseRouteConfig: Record<string, any> = {};
+  // Route configs with dynamic pricing
+  const monadRouteConfig: Record<string, any> = {
+    "/query/create": {
+      accepts: [{
+        scheme: "exact" as const,
+        price: createQueryPrice,
+        network: MONAD_NETWORK,
+        payTo,
+      }],
+      description: "Create a truth discovery query",
+      mimeType: "application/json",
+    },
+    "/query/:id/report": {
+      accepts: [{
+        scheme: "exact" as const,
+        price: reportPrice,
+        network: MONAD_NETWORK,
+        payTo,
+      }],
+      description: "Submit a report with bond",
+      mimeType: "application/json",
+    },
+  };
 
-  for (const [route, cfg] of Object.entries(paidRoutes)) {
-    monadRouteConfig[route] = {
-      accepts: [{ scheme: "exact" as const, price: cfg.price, network: MONAD_NETWORK, payTo }],
-      description: cfg.description,
-      mimeType: "application/json",
-    };
-    coinbaseRouteConfig[route] = {
+  const coinbaseRouteConfig: Record<string, any> = {
+    "/query/create": {
       accepts: [
-        { scheme: "exact" as const, price: cfg.price, network: "eip155:84532" as const, payTo },
-        { scheme: "exact" as const, price: cfg.price, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const, payTo },
+        { scheme: "exact" as const, price: createQueryPrice, network: "eip155:84532" as const, payTo },
+        { scheme: "exact" as const, price: createQueryPrice, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const, payTo },
       ],
-      description: cfg.description,
+      description: "Create a truth discovery query",
       mimeType: "application/json",
-    };
-  }
+    },
+    "/query/:id/report": {
+      accepts: [
+        { scheme: "exact" as const, price: reportPrice, network: "eip155:84532" as const, payTo },
+        { scheme: "exact" as const, price: reportPrice, network: "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1" as const, payTo },
+      ],
+      description: "Submit a report with bond",
+      mimeType: "application/json",
+    },
+  };
 
   // ── Monad Facilitator ────────────────────────────────────
   try {
@@ -107,7 +152,7 @@ async function initializeMiddleware(payTo: string) {
 
     const monadServer = new x402ResourceServer(monadFacilitator).register(MONAD_NETWORK, monadScheme);
     monadMiddleware = paymentMiddleware(monadRouteConfig, monadServer);
-    console.log("[x402] Monad middleware ready");
+    console.log("[x402] Monad middleware ready (dynamic pricing)");
   } catch (err: any) {
     console.warn(`[x402] Monad facilitator failed: ${err.message}`);
   }
@@ -122,7 +167,7 @@ async function initializeMiddleware(payTo: string) {
       .register("eip155:84532", new ExactEvmScheme())
       .register("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", new ExactSvmScheme());
     coinbaseMiddleware = paymentMiddleware(coinbaseRouteConfig, coinbaseServer);
-    console.log("[x402] Coinbase middleware ready");
+    console.log("[x402] Coinbase middleware ready (dynamic pricing)");
   } catch (err: any) {
     console.warn(`[x402] Coinbase facilitator failed: ${err.message}`);
   }
@@ -169,7 +214,6 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
           ? monadMiddleware
           : coinbaseMiddleware;
       } catch {
-        // base64-encoded payload — try to extract network from decoded data
         try {
           const decoded = JSON.parse(Buffer.from(paymentHeader, "base64").toString("utf-8"));
           detectedChain = decoded?.accepted?.network || "";
@@ -182,7 +226,6 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
         }
       }
     } else {
-      // No payment yet → route based on preferred chain header
       if (preferredChain.includes("84532") || preferredChain.toLowerCase().includes("base") || preferredChain.includes("solana")) {
         useMiddleware = coinbaseMiddleware;
       } else {
