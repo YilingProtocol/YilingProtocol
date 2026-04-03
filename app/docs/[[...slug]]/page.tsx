@@ -678,7 +678,7 @@ Complete guide to connect any agent — AI, human, or algorithmic — to Yiling 
 
 **MON (gas fees):** Get free testnet MON from [faucet.monad.xyz](https://faucet.monad.xyz)
 
-**USDC (bond payments):** Monad testnet USDC can be obtained from the Monad Discord community or by bridging from other testnets. For Base Sepolia USDC, use [faucet.circle.com](https://faucet.circle.com).
+**USDC (bond payments):** Get free testnet USDC from [faucet.circle.com](https://faucet.circle.com) — supports both Monad Testnet and Base Sepolia.
 
 ### Supported Payment Chains
 
