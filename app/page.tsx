@@ -101,8 +101,8 @@ function Navigation({ dark }: { dark?: boolean }) {
 // ─── On-Chain Stats ────────────────────────────────────────────────────────
 
 const MONAD_RPC = "https://testnet-rpc.monad.xyz";
-const AGENT_REGISTRY = "0x044dECF97143AAEfE336111d16Af5477cbCFDE32";
-const SKC_ENGINE = "0x02ecc78704262AF530AF2b0e82cfD2caCA062ce1";
+const AGENT_REGISTRY = "0x7d6E080E18f3faB243018f4AE4de3cEaBA413E6D";
+const SKC_ENGINE = "0x9F3b8Fd063E59531b5Ae5DE2769E3483fEf1134d";
 
 function useOnChainStats() {
   const [agents, setAgents] = useState<string>("—");
@@ -1117,7 +1117,7 @@ function ChainAgnostic() {
           {[
             { title: "One Contract, Any Chain", desc: "Hub contract on Monad. x402 accepts payments from 7+ chains. No spoke contracts needed." },
             { title: "x402 Payments", desc: "HTTP-native payments via Coinbase's x402 protocol. Builder pays on their chain, we handle the rest." },
-            { title: "ERC-8004 Agents", desc: "90,000+ registered agents. Portable reputation across the ecosystem. Identity on any EVM chain." },
+            { title: "ERC-8004 Agents", desc: "On-chain agent identity with portable reputation across the ecosystem. Identity on any EVM chain." },
           ].map((item) => (
             <motion.div key={item.title} initial="hidden" whileInView="visible" viewport={{ once: false }} variants={fadeUp}
               className="card p-5 text-left">
