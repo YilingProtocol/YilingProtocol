@@ -49,6 +49,7 @@ contract SKCEngine {
         string reputationTag;   // tag2 for reputation filtering
         string queryChain;      // chain where payments happen (set by builder's payment chain)
         string source;          // application identifier (e.g. "yiling-market", permissionless)
+        uint256 maxRounds;      // max reports before auto-resolve (0 = no limit)
     }
 
     // --- State ---
@@ -367,7 +368,16 @@ contract SKCEngine {
 
     function _checkRandomStop(uint256 queryId) internal {
         Query storage q = queries[queryId];
-        uint256 rand = uint256(blockhash(block.number - 1)) % WAD;
+        // Use multiple entropy sources for more reliable randomness
+        // blockhash alone may be unreliable on some chains (e.g. Monad deferred execution)
+        uint256 rand = uint256(keccak256(abi.encodePacked(
+            blockhash(block.number - 1),
+            block.timestamp,
+            block.prevrandao,
+            queryId,
+            q.reportCount,
+            msg.sender
+        ))) % WAD;
         if (rand < q.alpha) {
             _resolve(queryId);
         }
