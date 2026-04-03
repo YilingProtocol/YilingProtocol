@@ -805,7 +805,9 @@ npm install @x402/fetch @x402/evm viem
 
 ### Usage (JavaScript/TypeScript)
 
-\`\`\`typescript
+\`\`\`javascript
+// Save as agent.mjs and run: node agent.mjs
+
 import { x402Client, x402HTTPClient, wrapFetchWithPayment } from "@x402/fetch";
 import { registerExactEvmScheme } from "@x402/evm/exact/client";
 import { toClientEvmSigner } from "@x402/evm";
@@ -835,22 +837,26 @@ const x402Fetch = wrapFetchWithPayment(
 );
 
 // 3. Use it like normal fetch — payments are automatic
-const res = await x402Fetch(
-  "https://api.yilingprotocol.com/query/8/report",
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      probability: "750000000000000000",
-      reporter: account.address,
-      sourceChain: "eip155:10143",
-    }),
-  }
-);
+async function main() {
+  const res = await x402Fetch(
+    "https://api.yilingprotocol.com/query/0/report",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        probability: "750000000000000000",
+        reporter: account.address,
+        sourceChain: "eip155:10143",
+      }),
+    }
+  );
 
-const result = await res.json();
-console.log(result);
-// { queryId: "8", txHash: "0x...", paymentChain: "eip155:10143", status: "submitted" }
+  const result = await res.json();
+  console.log(result);
+  // { queryId: "0", txHash: "0x...", paymentChain: "eip155:10143", status: "submitted" }
+}
+
+main().catch(console.error);
 \`\`\`
 
 ### How x402 works
