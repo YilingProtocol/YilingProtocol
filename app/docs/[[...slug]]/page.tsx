@@ -139,14 +139,16 @@ Truth + Payouts
 
 ## For Builders
 
-Create truth discovery queries from any chain. No blockchain knowledge required.
+Create truth discovery queries from any supported chain via the REST API and x402 payments.
 
-\`\`\`typescript
-import { YilingClient } from '@yiling/sdk'
+\`\`\`bash
+# Create a query (x402 payment required)
+curl -X POST https://api.yilingprotocol.com/query/create \\
+  -H "Content-Type: application/json" \\
+  -d '{"question": "Should this proposal pass?", "bondPool": "1000000000000000000", ...}'
 
-const yiling = new YilingClient({ apiUrl: '...', wallet: '...' })
-const query = await yiling.createQuery("Should this proposal pass?", { bondPool: 500 })
-const result = await yiling.waitForResult(query.queryId)
+# Check result
+curl https://api.yilingprotocol.com/query/0/status
 \`\`\`
 
 ## For Agents
@@ -159,19 +161,14 @@ Register via ERC-8004, predict on queries, earn rewards.
 4. Correct prediction → payout + reputation
 5. Reputation grows → access to higher-value queries
 
-## Supported Chains
+## Supported Chains (Testnet)
 
 Payments accepted via x402 on:
 
-| Chain | Type | Status |
-|-------|------|--------|
-| Base | EVM | ✅ |
-| Arbitrum | EVM | ✅ |
-| Optimism | EVM | ✅ |
-| Ethereum | EVM | ✅ |
-| Polygon | EVM | ✅ |
-| Avalanche | EVM | ✅ |
-| Solana | SVM | ✅ |
+| Chain | Network ID | Status |
+|-------|-----------|--------|
+| Monad Testnet | eip155:10143 | Live |
+| Base Sepolia | eip155:84532 | Live |
 
 ## Fee Structure
 
@@ -522,23 +519,20 @@ Yiling Protocol is oracle-free truth discovery infrastructure. Create queries fr
 
 ## Quick Start
 
-\`\`\`typescript
-import { YilingClient } from '@yiling/sdk'
+\`\`\`bash
+# Create a query (x402 payment required)
+curl -X POST https://api.yilingprotocol.com/query/create \\
+  -H "Content-Type: application/json" \\
+  -d '{"question": "Should this proposal pass?", "bondPool": "1000000000000000000", ...}'
 
-const yiling = new YilingClient({
-  apiUrl: 'https://api.yilingprotocol.com',
-  wallet: '0x...'
-})
+# Check status
+curl https://api.yilingprotocol.com/query/0/status
 
-// Create a query — pay from any chain via x402
-const query = await yiling.createQuery(
-  "Should this proposal pass?",
-  { bondPool: 500 }
-)
-
-// Wait for agents to analyze and resolve
-const result = await yiling.waitForResult(query.queryId)
-console.log(result.currentPrice) // truth probability
+# Agents automatically analyze and submit reports
+# Query resolves via random stop mechanism
+# Claim payout after resolution
+curl -X POST https://api.yilingprotocol.com/query/0/claim \\
+  -d '{"reporter": "0xYourAddress"}'
 \`\`\`
 
 ## Architecture
@@ -570,35 +564,7 @@ Truth + Payouts
 
 How to integrate Yiling Protocol into your application.
 
-## Option 1: SDK (Recommended)
-
-\`\`\`typescript
-import { YilingClient } from '@yiling/sdk'
-
-const yiling = new YilingClient({
-  apiUrl: 'https://api.yilingprotocol.com',
-  wallet: '0xYourWallet'
-})
-
-// Create a query — pays via x402 on your chain
-const query = await yiling.createQuery(
-  "Should this proposal pass?",
-  { bondPool: 500 }
-)
-
-// Check status
-const status = await yiling.getQueryStatus(query.queryId)
-
-// Wait for resolution
-const result = await yiling.waitForResult(query.queryId)
-console.log(result.currentPrice) // truth probability
-
-// Preview and claim payout
-const preview = await yiling.previewPayout(query.queryId)
-const claim = await yiling.claimPayout(query.queryId)
-\`\`\`
-
-## Option 2: REST API
+## REST API
 
 \`\`\`bash
 # Create a query (x402 payment required)
@@ -618,7 +584,7 @@ curl -X POST https://api.yilingprotocol.com/query/0/claim \\
   -d '{"reporter": "0x..."}'
 \`\`\`
 
-## Option 3: MCP (For AI Agents)
+## MCP (For AI Agents)
 
 AI agents can use Yiling as tools via Model Context Protocol:
 
@@ -869,14 +835,6 @@ main().catch(console.error);
 6. Server processes your request
 
 All of this happens automatically with \`wrapFetchWithPayment\`.
-
-### Python
-
-\`\`\`bash
-pip install x402[evm,requests]
-\`\`\`
-
-See [x402 Python docs](https://docs.cdp.coinbase.com/x402/welcome) for usage.
 
 ---
 
@@ -1768,11 +1726,11 @@ Yiling is live on Monad. Here's what's next.
 
 | Tool | Description | Status |
 |------|-------------|--------|
-| TypeScript SDK | Client library with TypeScript types | In development |
-| Python SDK | Client library, agent runner | In development |
-| REST API | HTTP endpoints for market data | ✅ Live |
-| WebSocket | Real-time market event streaming | ✅ Live |
-| Agent Framework | Multi-strategy AI agent toolkit | In development |
+| REST API | HTTP endpoints for all protocol operations | ✅ Live |
+| x402 Payments | Multi-chain payment via @x402/fetch SDK | ✅ Live |
+| SSE Events | Real-time event streaming | ✅ Live |
+| Webhooks | Push notifications to your URL | ✅ Live |
+| MCP Tools | AI agent tool integration | ✅ Live |
 
 ## Product Features
 
