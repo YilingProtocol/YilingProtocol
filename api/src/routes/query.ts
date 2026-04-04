@@ -23,8 +23,6 @@ const query = new Hono<Env>();
 const queryPaymentChains = new Map<string, string>();
 const querySources = new Map<string, string>();
 
-// Agent registration cache — once registered, always registered
-const agentCache = new Map<string, { isRegistered: boolean; agentId: string }>();
 
 /**
  * POST /query/create
@@ -267,8 +265,23 @@ query.post("/:id/report", async (c) => {
 
       // Update DB with new report count and price
       const newReportCount = Number(await contract.getReportCount(queryId));
-      const updatedInfo = await contract.getQueryInfo(queryId);
-      db.updateQueryOnReport(Number(queryId), newReportCount, updatedInfo.currentPrice.toString());
+      const latestReportForDb = await contract.getReport(queryId, BigInt(newReportCount - 1));
+      db.updateQueryOnReport(Number(queryId), newReportCount, latestReportForDb.priceAfter.toString());
+
+      // Insert report into DB
+      db.insertReport(Number(queryId), newReportCount - 1, {
+        agentId: latestReportForDb.agentId.toString(),
+        reporter: latestReportForDb.reporter,
+        probability: latestReportForDb.probability.toString(),
+        priceBefore: latestReportForDb.priceBefore.toString(),
+        priceAfter: latestReportForDb.priceAfter.toString(),
+        bondAmount: latestReportForDb.bondAmount.toString(),
+        sourceChain: latestReportForDb.sourceChain,
+        timestamp: latestReportForDb.timestamp.toString(),
+      });
+
+      // Cache agent registration
+      db.upsertAgent(latestReportForDb.reporter, latestReportForDb.agentId.toString());
       if (resolvedAfter) {
         db.markResolved(Number(queryId));
       }
@@ -316,60 +329,46 @@ query.post("/:id/report", async (c) => {
  * GET /query/:id/status
  * Get query status and details (free)
  */
-query.get("/:id/status", async (c) => {
+query.get("/:id/status", (c) => {
   try {
     const qId = c.req.param("id")!;
-    const cacheKey = `query:${qId}:status`;
 
-    // Return cached data if fresh (5s TTL)
-    const cached = cacheGet<any>(cacheKey);
-    if (cached) return c.json(cached);
-
-    const queryId = BigInt(qId);
-
-    const [info, params, reportCount] = await Promise.all([
-      contract.getQueryInfo(queryId),
-      contract.getQueryParams(queryId),
-      contract.getReportCount(queryId),
-    ]);
-
-    const reports = [];
-    for (let i = 0n; i < reportCount; i++) {
-      const report = await contract.getReport(queryId, i);
-      reports.push({
-        agentId: report.agentId.toString(),
-        reporter: report.reporter,
-        probability: report.probability.toString(),
-        priceBefore: report.priceBefore.toString(),
-        priceAfter: report.priceAfter.toString(),
-        bondAmount: report.bondAmount.toString(),
-        sourceChain: report.sourceChain,
-        timestamp: report.timestamp.toString(),
-      });
+    const queryRow = db.getQuery(Number(qId));
+    if (!queryRow) {
+      return c.json({ error: "Query not found" }, 404);
     }
+
+    const reportRows = db.getReports(Number(qId));
 
     const result = {
       queryId: qId,
-      question: info.question,
-      currentPrice: info.currentPrice.toString(),
-      creator: info.creator,
-      resolved: info.resolved,
-      totalPool: info.totalPool.toString(),
-      reportCount: info.reportCount.toString(),
-      source: querySources.get(qId) || "",
+      question: queryRow.question,
+      currentPrice: queryRow.current_price,
+      creator: queryRow.creator,
+      resolved: queryRow.resolved === 1,
+      totalPool: queryRow.total_pool,
+      reportCount: queryRow.report_count.toString(),
+      source: queryRow.source,
       params: {
-        alpha: params.alpha.toString(),
-        k: params.k.toString(),
-        flatReward: params.flatReward.toString(),
-        bondAmount: params.bondAmount.toString(),
-        liquidityParam: params.liquidityParam.toString(),
-        createdAt: params.createdAt.toString(),
+        alpha: queryRow.alpha || "0",
+        k: queryRow.k || "0",
+        flatReward: queryRow.flat_reward || "0",
+        bondAmount: queryRow.bond_amount || "0",
+        liquidityParam: queryRow.liquidity_param || "0",
+        createdAt: queryRow.created_at?.toString() || "0",
       },
-      reports,
+      reports: reportRows.map((r) => ({
+        agentId: r.agent_id,
+        reporter: r.reporter,
+        probability: r.probability,
+        priceBefore: r.price_before,
+        priceAfter: r.price_after,
+        bondAmount: r.bond_amount,
+        sourceChain: r.source_chain,
+        timestamp: r.timestamp,
+      })),
     };
 
-    // Cache longer if resolved (30s) since data won't change
-    cacheSet(cacheKey, result, info.resolved ? 30000 : 5000);
     return c.json(result);
   } catch (err: any) {
     return c.json({ error: err.message }, 500);
@@ -518,18 +517,20 @@ query.post("/:id/join", async (c) => {
 
     const walletLower = (wallet as string).toLowerCase();
 
-    // Check agent registration (cached — once registered, always registered)
-    let cached = agentCache.get(walletLower);
-    if (!cached) {
+    // Check agent registration — DB first, chain fallback
+    let agentRow = db.getAgent(walletLower);
+    if (!agentRow) {
       const [isRegistered, agentId] = await Promise.all([
         contract.isRegisteredAgent(wallet as Address),
         contract.getAgentId(wallet as Address).catch(() => 0n),
       ]);
-      cached = { isRegistered: isRegistered as boolean, agentId: agentId.toString() };
-      if (isRegistered) agentCache.set(walletLower, cached);
+      if (isRegistered) {
+        db.upsertAgent(walletLower, agentId.toString());
+        agentRow = { wallet: walletLower, agent_id: agentId.toString(), is_registered: 1, registered_at: Date.now() };
+      }
     }
 
-    if (!cached.isRegistered) {
+    if (!agentRow || agentRow.is_registered !== 1) {
       return c.json({
         error: "Agent not registered. Mint ERC-8004 identity and call joinEcosystem first.",
         registrationEndpoint: "POST /agent/register",
@@ -544,7 +545,7 @@ query.post("/:id/join", async (c) => {
 
     const result = orchestrator.joinPool(queryId, {
       address: wallet,
-      agentId: cached.agentId,
+      agentId: agentRow.agent_id,
     });
 
     if (!result.ok) {

@@ -47,6 +47,28 @@ export function initDb() {
       updated_at INTEGER NOT NULL DEFAULT 0
     );
 
+    CREATE TABLE IF NOT EXISTS reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      query_id INTEGER NOT NULL,
+      report_index INTEGER NOT NULL,
+      agent_id TEXT NOT NULL,
+      reporter TEXT NOT NULL,
+      probability TEXT NOT NULL,
+      price_before TEXT NOT NULL,
+      price_after TEXT NOT NULL,
+      bond_amount TEXT NOT NULL DEFAULT '0',
+      source_chain TEXT NOT NULL DEFAULT '',
+      timestamp TEXT NOT NULL,
+      UNIQUE(query_id, report_index)
+    );
+
+    CREATE TABLE IF NOT EXISTS agents (
+      wallet TEXT PRIMARY KEY,
+      agent_id TEXT NOT NULL,
+      is_registered INTEGER NOT NULL DEFAULT 1,
+      registered_at INTEGER NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS orchestrations (
       query_id TEXT PRIMARY KEY,
       state TEXT NOT NULL DEFAULT 'pooling',
@@ -157,6 +179,58 @@ export function getDbQueryCount(): number {
   return row.cnt;
 }
 
+// ========== REPORT CRUD ==========
+
+export interface ReportRow {
+  id: number;
+  query_id: number;
+  report_index: number;
+  agent_id: string;
+  reporter: string;
+  probability: string;
+  price_before: string;
+  price_after: string;
+  bond_amount: string;
+  source_chain: string;
+  timestamp: string;
+}
+
+export function insertReport(queryId: number, reportIndex: number, data: {
+  agentId: string; reporter: string; probability: string;
+  priceBefore: string; priceAfter: string; bondAmount: string;
+  sourceChain: string; timestamp: string;
+}) {
+  db.prepare(`
+    INSERT OR IGNORE INTO reports (query_id, report_index, agent_id, reporter, probability, price_before, price_after, bond_amount, source_chain, timestamp)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(queryId, reportIndex, data.agentId, data.reporter, data.probability, data.priceBefore, data.priceAfter, data.bondAmount, data.sourceChain, data.timestamp);
+}
+
+export function getReports(queryId: number): ReportRow[] {
+  return db.prepare("SELECT * FROM reports WHERE query_id = ? ORDER BY report_index ASC").all(queryId) as ReportRow[];
+}
+
+// ========== AGENT CRUD ==========
+
+export interface AgentRow {
+  wallet: string;
+  agent_id: string;
+  is_registered: number;
+  registered_at: number;
+}
+
+export function upsertAgent(wallet: string, agentId: string) {
+  db.prepare(`
+    INSERT INTO agents (wallet, agent_id, is_registered, registered_at)
+    VALUES (?, ?, 1, ?)
+    ON CONFLICT(wallet) DO UPDATE SET agent_id = ?, is_registered = 1
+  `).run(wallet.toLowerCase(), agentId, Date.now(), agentId);
+}
+
+export function getAgent(wallet: string): AgentRow | null {
+  return (db.prepare("SELECT * FROM agents WHERE wallet = ?").get(wallet.toLowerCase()) as AgentRow) || null;
+}
+
 // ========== ORCHESTRATION CRUD ==========
 
 export interface OrchestrationRow {
@@ -262,6 +336,27 @@ export async function syncQueriesFromChain() {
         liquidity_param: params.liquidityParam.toString(),
         created_at: Number(params.createdAt),
       });
+
+      // Sync reports for this query
+      const { getReport } = await import("./contract.js");
+      const reportCount = Number(info.reportCount);
+      for (let r = 0; r < reportCount; r++) {
+        try {
+          const report = await getReport(BigInt(i), BigInt(r));
+          insertReport(i, r, {
+            agentId: report.agentId.toString(),
+            reporter: report.reporter,
+            probability: report.probability.toString(),
+            priceBefore: report.priceBefore.toString(),
+            priceAfter: report.priceAfter.toString(),
+            bondAmount: report.bondAmount.toString(),
+            sourceChain: report.sourceChain,
+            timestamp: report.timestamp.toString(),
+          });
+          // Also cache the agent
+          upsertAgent(report.reporter, report.agentId.toString());
+        } catch {}
+      }
     } catch (err: any) {
       console.log(`[db] Failed to sync query ${i}: ${err.message}`);
     }

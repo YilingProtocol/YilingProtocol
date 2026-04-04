@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import * as contract from "../services/contract.js";
+import * as db from "../services/db.js";
 import { config } from "../config.js";
 import type { Address } from "viem";
 
@@ -8,15 +9,31 @@ const agent = new Hono();
 /**
  * GET /agent/:address/status
  * Check if an address is a registered agent
+ * Reads from DB first, falls back to chain if not cached.
  */
 agent.get("/:address/status", async (c) => {
   try {
     const address = c.req.param("address") as Address;
 
+    // Check DB first
+    const cached = db.getAgent(address);
+    if (cached) {
+      return c.json({
+        address,
+        isRegistered: cached.is_registered === 1,
+        agentId: cached.agent_id,
+      });
+    }
+
+    // DB miss — check chain and cache result
     const [isRegistered, agentId] = await Promise.all([
       contract.isRegisteredAgent(address),
       contract.getAgentId(address),
     ]);
+
+    if (isRegistered) {
+      db.upsertAgent(address, agentId.toString());
+    }
 
     return c.json({
       address,
