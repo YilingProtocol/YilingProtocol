@@ -52,15 +52,33 @@ interface Report {
 
 // ─── API Helpers ────────────────────────────────────────────
 
+// Cache of last successful responses — used to return stale data on 500 errors
+// instead of clearing the UI. Prevents flickering when the API has intermittent failures.
+const apiCache: Map<string, any> = new Map();
+
 async function getActiveQueries(): Promise<Query[]> {
-  const res = await fetch(`${config.apiUrl}/queries/active`);
+  const cacheKey = "/queries/active";
+  const res = await fetch(`${config.apiUrl}${cacheKey}`);
+  if (!res.ok && res.status >= 500 && apiCache.has(cacheKey)) {
+    console.log(`[API] /queries/active returned ${res.status}, using cached data`);
+    return apiCache.get(cacheKey);
+  }
   const data: any = await res.json();
-  return data.activeQueries;
+  const queries = data.activeQueries;
+  apiCache.set(cacheKey, queries);
+  return queries;
 }
 
 async function getQueryStatus(queryId: string): Promise<any> {
-  const res = await fetch(`${config.apiUrl}/query/${queryId}/status`);
-  return res.json();
+  const cacheKey = `/query/${queryId}/status`;
+  const res = await fetch(`${config.apiUrl}${cacheKey}`);
+  if (!res.ok && res.status >= 500 && apiCache.has(cacheKey)) {
+    console.log(`[API] ${cacheKey} returned ${res.status}, using cached data`);
+    return apiCache.get(cacheKey);
+  }
+  const data = await res.json();
+  apiCache.set(cacheKey, data);
+  return data;
 }
 
 function hasAlreadyReported(reports: Report[]): boolean {

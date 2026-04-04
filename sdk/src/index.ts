@@ -94,6 +94,8 @@ function toUsdcUnits(value: number): string {
 export class YilingClient {
   private apiUrl: string;
   private wallet?: string;
+  /** Cache of last successful GET responses, keyed by path. Used to return stale data on 500 errors instead of throwing. */
+  private responseCache: Map<string, any> = new Map();
 
   constructor(config: YilingConfig) {
     this.apiUrl = config.apiUrl.replace(/\/$/, "");
@@ -235,10 +237,19 @@ export class YilingClient {
   private async get(path: string): Promise<any> {
     const res = await fetch(`${this.apiUrl}${path}`);
     if (!res.ok) {
+      // On server errors (5xx), return cached data if available instead of
+      // clearing the caller's state. This prevents UI flickering when the API
+      // has intermittent failures.
+      if (res.status >= 500 && this.responseCache.has(path)) {
+        console.warn(`[YilingSDK] GET ${path} returned ${res.status}, using cached data`);
+        return this.responseCache.get(path);
+      }
       const err = await res.json().catch(() => ({ error: res.statusText }));
       throw new Error(err.error || `HTTP ${res.status}`);
     }
-    return res.json();
+    const data = await res.json();
+    this.responseCache.set(path, data);
+    return data;
   }
 
   private async post(path: string, body: any): Promise<any> {

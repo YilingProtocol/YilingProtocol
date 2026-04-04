@@ -120,13 +120,16 @@ function useOnChainStats() {
             params: [{ to: AGENT_REGISTRY, data: "0x32d57004" }, "latest"] // totalJoinedAgents()
           }),
         });
+        // On server errors (5xx), skip updating state so previous successful
+        // data is retained — prevents UI flickering on intermittent failures
+        if (!agentRes.ok && agentRes.status >= 500) return;
         const agentData = await agentRes.json();
         if (agentData.result) {
           setAgents(String(parseInt(agentData.result, 16)));
         }
 
       } catch {
-        // silently fail, keep defaults
+        // silently fail, keep previous data
       }
     }
     fetchStats();
