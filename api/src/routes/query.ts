@@ -23,6 +23,9 @@ const query = new Hono<Env>();
 const queryPaymentChains = new Map<string, string>();
 const querySources = new Map<string, string>();
 
+// Agent registration cache — once registered, always registered
+const agentCache = new Map<string, { isRegistered: boolean; agentId: string }>();
+
 /**
  * POST /query/create
  * Create a new truth discovery query
@@ -513,32 +516,35 @@ query.post("/:id/join", async (c) => {
 
     if (!wallet) return c.json({ error: "wallet address is required" }, 400);
 
-    // Verify query exists and is active
-    const active = await contract.isQueryActive(BigInt(queryId));
-    if (!active) {
-      return c.json({ error: "Query is not active" }, 409);
+    const walletLower = (wallet as string).toLowerCase();
+
+    // Check agent registration (cached — once registered, always registered)
+    let cached = agentCache.get(walletLower);
+    if (!cached) {
+      const [isRegistered, agentId] = await Promise.all([
+        contract.isRegisteredAgent(wallet as Address),
+        contract.getAgentId(wallet as Address).catch(() => 0n),
+      ]);
+      cached = { isRegistered: isRegistered as boolean, agentId: agentId.toString() };
+      if (isRegistered) agentCache.set(walletLower, cached);
     }
 
-    // Verify ERC-8004 registration
-    const isRegistered = await contract.isRegisteredAgent(wallet as Address);
-    if (!isRegistered) {
+    if (!cached.isRegistered) {
       return c.json({
         error: "Agent not registered. Mint ERC-8004 identity and call joinEcosystem first.",
         registrationEndpoint: "POST /agent/register",
       }, 403);
     }
 
-    // Check if already reported on-chain
-    const alreadyReported = await contract.hasReported(BigInt(queryId), wallet as Address);
-    if (alreadyReported) {
-      return c.json({ error: "Agent has already reported on this query" }, 409);
+    // Query active check uses DB (no RPC needed — DB is kept in sync)
+    const queryRow = db.getQuery(Number(queryId));
+    if (queryRow?.resolved) {
+      return c.json({ error: "Query is not active" }, 409);
     }
-
-    const agentId = await contract.getAgentId(wallet as Address);
 
     const result = orchestrator.joinPool(queryId, {
       address: wallet,
-      agentId: agentId.toString(),
+      agentId: cached.agentId,
     });
 
     if (!result.ok) {
