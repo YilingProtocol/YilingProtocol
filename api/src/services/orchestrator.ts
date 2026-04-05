@@ -508,17 +508,27 @@ async function advanceOrStop(queryId: string) {
   // Check if there are more agents to select
   const available = orch.pool.filter(a => !orch.usedAgents.has(a.address.toLowerCase()));
   if (available.length === 0) {
-    // All agents used but market didn't self-resolve — force resolve on-chain
-    console.log(`[orchestrator] query ${queryId}: pool exhausted, forcing resolve`);
+    // Pool exhausted — check if already resolved on-chain before forcing
+    let alreadyResolved = false;
     try {
-      await contract.forceResolve(BigInt(queryId));
-      console.log(`[orchestrator] query ${queryId}: forceResolve() successful`);
-    } catch (err: any) {
-      console.error(`[orchestrator] query ${queryId}: forceResolve() failed: ${err.message}`);
+      alreadyResolved = !(await contract.isQueryActive(BigInt(queryId)));
+    } catch {}
+
+    if (!alreadyResolved) {
+      console.log(`[orchestrator] query ${queryId}: pool exhausted, forcing resolve`);
+      try {
+        await contract.forceResolve(BigInt(queryId));
+        console.log(`[orchestrator] query ${queryId}: forceResolve() successful`);
+      } catch (err: any) {
+        console.error(`[orchestrator] query ${queryId}: forceResolve() failed: ${err.message}`);
+      }
+    } else {
+      console.log(`[orchestrator] query ${queryId}: pool exhausted, already resolved on-chain`);
     }
+
     orch.state = "resolved";
     persistOrch(orch);
-    broadcast("orchestration.ended", { queryId, reason: "pool_exhausted" });
+    broadcast("orchestration.ended", { queryId, reason: alreadyResolved ? "resolved" : "pool_exhausted" });
     return;
   }
 
