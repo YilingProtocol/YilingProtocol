@@ -51,14 +51,42 @@ const monadTestnet = {
   rpcUrls: { default: { http: [config.rpcUrl] } },
 } as const;
 
-// Clients — rate-limited transport to stay under Monad's 15 req/s limit
+// ========== RPC RATE LIMITER ==========
+// Monad public RPC allows 15 req/s — we cap at 10 to leave headroom.
+// Uses token bucket: 10 tokens refilled per second, each RPC call costs 1 token.
+const RPC_MAX_PER_SEC = 10;
+const rpcQueue: Array<{ resolve: () => void }> = [];
+let rpcTokens = RPC_MAX_PER_SEC;
+
+setInterval(() => {
+  rpcTokens = RPC_MAX_PER_SEC;
+  while (rpcTokens > 0 && rpcQueue.length > 0) {
+    rpcTokens--;
+    rpcQueue.shift()!.resolve();
+  }
+}, 1000);
+
+function rateLimitedFetch(url: string | URL | globalThis.Request, init?: RequestInit): Promise<Response> {
+  if (rpcTokens > 0) {
+    rpcTokens--;
+    return fetch(url, init);
+  }
+  return new Promise<void>((resolve) => rpcQueue.push({ resolve }))
+    .then(() => fetch(url, init));
+}
+
+// Clients — rate-limited + multicall batching for Monad public RPC (15 req/s)
 const publicClient = createPublicClient({
   chain: monadTestnet,
   transport: http(config.rpcUrl, {
     retryCount: 5,
     retryDelay: 1500,
-    batch: { batchSize: 10 },
+    fetchOptions: {},
+    fetch: rateLimitedFetch as any,
   }),
+  batch: {
+    multicall: true, // Batch multiple readContract calls into single multicall
+  },
 });
 
 const account = config.privateKey
