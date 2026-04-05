@@ -208,6 +208,7 @@ export function initOrchestration(queryId: string, queryChain: string = "eip155:
 
 /**
  * Agent joins the pool for a query (free, no bond).
+ * Only allowed during the pooling window. Once rounds start, pool is closed.
  */
 export function joinPool(queryId: string, agent: { address: string; agentId: string }): JoinResult {
   let orch = orchestrations.get(queryId);
@@ -219,6 +220,11 @@ export function joinPool(queryId: string, agent: { address: string; agentId: str
 
   if (orch.state === "resolved" || orch.state === "cancelled") {
     return { ok: false, error: `Query orchestration is ${orch.state}` };
+  }
+
+  // Pool is closed once rounds start — no late joins
+  if (orch.state !== "pooling") {
+    return { ok: false, error: "Pool is closed. Rounds have already started." };
   }
 
   const normalizedAddress = agent.address.toLowerCase();
@@ -388,10 +394,16 @@ async function startNextRound(orch: QueryOrchestration) {
 
   const agent = selectNextAgent(orch);
   if (!agent) {
-    // Pool exhausted
+    // All agents used but market didn't self-resolve — force resolve on-chain
+    console.log(`[orchestrator] query ${orch.queryId}: pool exhausted, forcing resolve`);
+    try {
+      await contract.forceResolve(BigInt(orch.queryId));
+      console.log(`[orchestrator] query ${orch.queryId}: forceResolve() successful`);
+    } catch (err: any) {
+      console.error(`[orchestrator] query ${orch.queryId}: forceResolve() failed: ${err.message}`);
+    }
     orch.state = "resolved";
     persistOrch(orch);
-    console.log(`[orchestrator] query ${orch.queryId}: pool exhausted`);
     broadcast("orchestration.ended", { queryId: orch.queryId, reason: "pool_exhausted" });
     return;
   }
@@ -496,9 +508,16 @@ async function advanceOrStop(queryId: string) {
   // Check if there are more agents to select
   const available = orch.pool.filter(a => !orch.usedAgents.has(a.address.toLowerCase()));
   if (available.length === 0) {
+    // All agents used but market didn't self-resolve — force resolve on-chain
+    console.log(`[orchestrator] query ${queryId}: pool exhausted, forcing resolve`);
+    try {
+      await contract.forceResolve(BigInt(queryId));
+      console.log(`[orchestrator] query ${queryId}: forceResolve() successful`);
+    } catch (err: any) {
+      console.error(`[orchestrator] query ${queryId}: forceResolve() failed: ${err.message}`);
+    }
     orch.state = "resolved";
     persistOrch(orch);
-    console.log(`[orchestrator] query ${queryId}: pool exhausted`);
     broadcast("orchestration.ended", { queryId, reason: "pool_exhausted" });
     return;
   }
