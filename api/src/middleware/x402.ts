@@ -264,6 +264,11 @@ async function initializeMiddleware(payTo: string) {
  */
 export function createMultiFacilitatorMiddleware(payTo: string) {
   return async (c: Context<PaymentEnv>, next: Next) => {
+    // Let CORS preflight through — never charge for OPTIONS
+    if (c.req.method === "OPTIONS") {
+      return next();
+    }
+
     const path = c.req.path;
     const route = matchRoute(path);
 
