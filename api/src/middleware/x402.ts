@@ -92,6 +92,45 @@ export function buildAccepts(price: string, payTo: string, restrictToNetwork?: s
   }));
 }
 
+// ─── Retry wrapper for facilitator clients ─────────────────
+
+const MAX_FACILITATOR_RETRIES = 3;
+
+/**
+ * Wraps an HTTPFacilitatorClient with retry logic for 429 (rate limit) errors.
+ * Returns a Proxy that intercepts verify/settle calls and retries on 429.
+ */
+function withRetry(client: HTTPFacilitatorClient): HTTPFacilitatorClient {
+  return new Proxy(client, {
+    get(target, prop, receiver) {
+      const original = Reflect.get(target, prop, receiver);
+      if (typeof original !== "function") return original;
+
+      // Only retry verify and settle — pass through everything else
+      if (prop !== "verify" && prop !== "settle") {
+        return original.bind(target);
+      }
+
+      return async (...args: any[]) => {
+        for (let attempt = 0; attempt < MAX_FACILITATOR_RETRIES; attempt++) {
+          try {
+            return await original.apply(target, args);
+          } catch (err: any) {
+            const is429 = err?.message?.includes("429") || err?.status === 429;
+            if (is429 && attempt < MAX_FACILITATOR_RETRIES - 1) {
+              const delay = (attempt + 1) * 2000 + Math.random() * 1000;
+              console.warn(`[x402] Facilitator ${String(prop)} got 429, retry ${attempt + 1}/${MAX_FACILITATOR_RETRIES} in ${(delay / 1000).toFixed(1)}s`);
+              await new Promise(r => setTimeout(r, delay));
+              continue;
+            }
+            throw err;
+          }
+        }
+      };
+    },
+  });
+}
+
 // ─── Middleware State ───────────────────────────────────────
 let monadMiddleware: ((c: Context, next: Next) => Promise<any>) | null = null;
 let coinbaseMiddleware: ((c: Context, next: Next) => Promise<any>) | null = null;
@@ -146,7 +185,7 @@ async function initializeMiddleware(payTo: string) {
 
   // ── Monad Facilitator ────────────────────────────────────
   try {
-    const monadFacilitator = new HTTPFacilitatorClient({ url: MONAD_FACILITATOR_URL });
+    const monadFacilitator = withRetry(new HTTPFacilitatorClient({ url: MONAD_FACILITATOR_URL }));
     const supported = await monadFacilitator.getSupported();
     console.log(`[x402] Monad facilitator connected (${supported.kinds.length} kinds)`);
 
@@ -171,7 +210,7 @@ async function initializeMiddleware(payTo: string) {
 
   // ── Coinbase Facilitator ─────────────────────────────────
   try {
-    const coinbaseFacilitator = new HTTPFacilitatorClient({ url: COINBASE_FACILITATOR_URL });
+    const coinbaseFacilitator = withRetry(new HTTPFacilitatorClient({ url: COINBASE_FACILITATOR_URL }));
     const supported = await coinbaseFacilitator.getSupported();
     console.log(`[x402] Coinbase facilitator connected (${supported.kinds.length} kinds)`);
 
@@ -254,17 +293,34 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
       c.set("paymentChain", detectedChain);
     }
 
-    // Use middleware if available, otherwise pass through
+    // Use middleware if available — retry with fallback facilitator on failure
     if (useMiddleware) {
       try {
         return await useMiddleware(c, next);
       } catch (err: any) {
-        console.warn(`[x402] Middleware error on ${path}: ${err.message}`);
-        return next();
+        console.warn(`[x402] Primary middleware error on ${path}: ${err.message}`);
+
+        // Retry with alternate facilitator if available
+        const fallback = useMiddleware === monadMiddleware ? coinbaseMiddleware : monadMiddleware;
+        if (fallback) {
+          try {
+            console.log(`[x402] Retrying ${path} with fallback facilitator...`);
+            return await fallback(c, next);
+          } catch (err2: any) {
+            console.warn(`[x402] Fallback also failed on ${path}: ${err2.message}`);
+          }
+        }
+
+        // Both facilitators failed — return 402, do NOT pass through
+        return c.json({
+          error: "Payment processing failed. Please try again.",
+          details: err.message,
+        }, 402);
       }
     }
 
-    console.warn(`[x402] No facilitator for ${path} — passing through`);
-    return next();
+    // No facilitator available at all — block paid routes
+    console.warn(`[x402] No facilitator for ${path} — rejecting`);
+    return c.json({ error: "Payment service unavailable" }, 503);
   };
 }
