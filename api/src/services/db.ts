@@ -72,6 +72,7 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS orchestrations (
       query_id TEXT PRIMARY KEY,
       state TEXT NOT NULL DEFAULT 'pooling',
+      query_chain TEXT NOT NULL DEFAULT 'eip155:10143',
       pool TEXT NOT NULL DEFAULT '[]',
       used_agents TEXT NOT NULL DEFAULT '[]',
       reports TEXT NOT NULL DEFAULT '[]',
@@ -81,6 +82,14 @@ export function initDb() {
       pooling_deadline INTEGER NOT NULL
     );
   `);
+
+  // Migration: add query_chain column to existing DBs
+  try {
+    db.prepare("SELECT query_chain FROM orchestrations LIMIT 1").get();
+  } catch {
+    db.prepare("ALTER TABLE orchestrations ADD COLUMN query_chain TEXT NOT NULL DEFAULT 'eip155:10143'").run();
+    console.log("[db] Migrated: added query_chain column to orchestrations");
+  }
 
   console.log(`[db] SQLite initialized at ${DB_PATH}`);
 }
@@ -236,6 +245,7 @@ export function getAgent(wallet: string): AgentRow | null {
 export interface OrchestrationRow {
   query_id: string;
   state: string;
+  query_chain: string;
   pool: string; // JSON
   used_agents: string; // JSON
   reports: string; // JSON
@@ -247,6 +257,7 @@ export interface OrchestrationRow {
 
 export function saveOrchestration(queryId: string, data: {
   state: string;
+  queryChain?: string;
   pool: any[];
   usedAgents: string[];
   reports: any[];
@@ -267,18 +278,19 @@ export function saveOrchestration(queryId: string, data: {
     selectedAt: data.currentRound.selectedAt,
     status: data.currentRound.status,
   }) : null;
+  const queryChain = data.queryChain || "eip155:10143";
 
   if (existing) {
     db.prepare(`
-      UPDATE orchestrations SET state = ?, pool = ?, used_agents = ?, reports = ?,
+      UPDATE orchestrations SET state = ?, query_chain = ?, pool = ?, used_agents = ?, reports = ?,
       round_history = ?, current_round = ?
       WHERE query_id = ?
-    `).run(data.state, poolJson, usedJson, reportsJson, historyJson, roundJson, queryId);
+    `).run(data.state, queryChain, poolJson, usedJson, reportsJson, historyJson, roundJson, queryId);
   } else {
     db.prepare(`
-      INSERT INTO orchestrations (query_id, state, pool, used_agents, reports, round_history, current_round, created_at, pooling_deadline)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(queryId, data.state, poolJson, usedJson, reportsJson, historyJson, roundJson, data.createdAt, data.poolingDeadline);
+      INSERT INTO orchestrations (query_id, state, query_chain, pool, used_agents, reports, round_history, current_round, created_at, pooling_deadline)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(queryId, data.state, queryChain, poolJson, usedJson, reportsJson, historyJson, roundJson, data.createdAt, data.poolingDeadline);
   }
 }
 

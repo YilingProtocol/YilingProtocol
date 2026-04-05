@@ -111,8 +111,8 @@ query.post("/create", async (c) => {
         const { cacheQuerySource } = await import("../index.js");
         cacheQuerySource(queryId, source || "");
 
-        // Initialize orchestration for this query
-        orchestrator.initOrchestration(queryId);
+        // Initialize orchestration for this query (pass payment chain so agents know where to bond)
+        orchestrator.initOrchestration(queryId, chain);
 
         // Persist query to DB
         db.upsertQuery(Number(queryId), {

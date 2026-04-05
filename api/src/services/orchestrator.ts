@@ -55,12 +55,16 @@ interface StatePackage {
   question: string;
   currentPrice: string;
   bondAmount: string;
+  /** CAIP-2 chain where this query's bonds must be paid (e.g. "eip155:10143") */
+  queryChain: string;
   reports: ReportSummary[];
   timeoutMs: number;
 }
 
 export interface QueryOrchestration {
   queryId: string;
+  /** CAIP-2 chain where bonds must be paid (e.g. "eip155:10143") */
+  queryChain: string;
   state: OrchestratorState;
   pool: PooledAgent[];
   usedAgents: Set<string>;
@@ -85,6 +89,7 @@ function persistOrch(orch: QueryOrchestration) {
   try {
     db.saveOrchestration(orch.queryId, {
       state: orch.state,
+      queryChain: orch.queryChain,
       pool: orch.pool,
       usedAgents: Array.from(orch.usedAgents),
       reports: orch.reports,
@@ -124,6 +129,7 @@ export function recoverFromDb() {
 
     const orch: QueryOrchestration = {
       queryId: row.query_id,
+      queryChain: row.query_chain || "eip155:10143",
       state: row.state as OrchestratorState,
       pool,
       usedAgents: new Set(usedAgents),
@@ -162,13 +168,14 @@ export function recoverFromDb() {
  * Initialize orchestration for a newly created query.
  * Starts the pooling window timer.
  */
-export function initOrchestration(queryId: string): QueryOrchestration {
+export function initOrchestration(queryId: string, queryChain: string = "eip155:10143"): QueryOrchestration {
   if (orchestrations.has(queryId)) {
     return orchestrations.get(queryId)!;
   }
 
   const orch: QueryOrchestration = {
     queryId,
+    queryChain,
     state: "pooling",
     pool: [],
     usedAgents: new Set(),
@@ -515,6 +522,7 @@ async function buildStatePackage(orch: QueryOrchestration): Promise<StatePackage
     question: queryInfo.question,
     currentPrice: queryInfo.currentPrice.toString(),
     bondAmount: queryParams.bondAmount.toString(),
+    queryChain: orch.queryChain,
     reports: orch.reports,
     timeoutMs: config.orchestrator.roundTimeoutMs,
   };
