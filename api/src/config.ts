@@ -25,7 +25,7 @@ export const config = {
   // Orchestrator
   orchestrator: {
     poolingWindowMs: parseInt(process.env.ORCHESTRATOR_POOLING_WINDOW_MS || "30000"),
-    roundTimeoutMs: parseInt(process.env.ORCHESTRATOR_ROUND_TIMEOUT_MS || "10000"),
+    roundTimeoutMs: parseInt(process.env.ORCHESTRATOR_ROUND_TIMEOUT_MS || "60000"),
     minPoolSize: parseInt(process.env.ORCHESTRATOR_MIN_POOL_SIZE || "1"),
     maxPoolSize: parseInt(process.env.ORCHESTRATOR_MAX_POOL_SIZE || "50"),
   },
