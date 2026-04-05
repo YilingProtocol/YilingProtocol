@@ -211,7 +211,9 @@ export function createMultiFacilitatorMiddleware(payTo: string) {
       await initPromise;
     }
 
-    const paymentHeader = c.req.header("X-PAYMENT") || c.req.header("x-payment");
+    // x402 v2 uses PAYMENT-SIGNATURE, v1 uses X-PAYMENT
+    const paymentHeader = c.req.header("PAYMENT-SIGNATURE") || c.req.header("payment-signature")
+      || c.req.header("X-PAYMENT") || c.req.header("x-payment");
     const preferredChain = c.req.header("X-PREFERRED-CHAIN") || "";
 
     // Determine which middleware to use

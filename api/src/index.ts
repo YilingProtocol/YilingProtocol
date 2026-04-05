@@ -16,7 +16,8 @@ const app = new Hono();
 // Global middleware
 app.use("*", cors({
   origin: "*",
-  exposeHeaders: ["payment-required", "payment-response", "x-payment"],
+  allowHeaders: ["Content-Type", "X-PAYMENT", "PAYMENT-SIGNATURE", "X-PREFERRED-CHAIN", "X-PAYMENT-RESPONSE", "PAYMENT-RESPONSE"],
+  exposeHeaders: ["payment-required", "payment-response", "x-payment", "x-payment-response", "payment-signature"],
 }));
 app.use("*", logger());
 
